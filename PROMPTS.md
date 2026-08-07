@@ -278,6 +278,31 @@ Successfully executed Git operations without modifying application source code.
 
 ---
 
+## Prompt 12
+**Timestamp**: 2026-08-07T21:48:30+05:30
+**Milestone**: 4 - AI Prompt Engine & LLM Abstraction Layer
+**Objective**: Create Prompt Engine.
+**Context**: We need a centralized place to construct prompts for the LLM to ensure consistency and modularity.
+**Prompt Given**: "Create Prompt Engine. Responsibilities: Build interview prompts, follow-up prompts, evaluation prompts, feedback prompts. Prompt templates must be modular."
+**Reasoning**: Keeping prompt construction decoupled from API calls allows us to easily tweak language or context without breaking the logic.
+**AI Output Summary**: Created `prompt_engine.py` in `backend/services/ai/`. Implemented static methods for building various prompts securely.
+**Architecture Decisions**: 
+- Used simple Python f-strings in static methods to keep templates lightweight and easy to maintain.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/services/ai/__init__.py`
+- `backend/services/ai/prompt_engine.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(ai): create prompt engine
+**Testing Performed**: Code syntax check.
+**Result**: Prompt templates are modularized.
+**Known Limitations**: Complex prompting may require Jinja templates in the future.
+**Next Planned Milestone**: 4 (Subtask: Context Builder)
+---
+
 ## Prompt 11
 **Timestamp**: 2026-08-07T21:40:00+05:30
 **Milestone**: 3 - Core Interview Domain
