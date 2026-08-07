@@ -452,3 +452,28 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Complete end-to-end AI abstraction layer is ready.
 **Known Limitations**: None
 **Next Planned Milestone**: 4 (Subtask: AI Unit Tests)
+
+---
+
+## Prompt 18
+**Timestamp**: 2026-08-07T21:52:30+05:30
+**Milestone**: 4 - AI Prompt Engine & LLM Abstraction Layer
+**Objective**: Create AI unit tests.
+**Context**: We need to verify that the Context Builder stringifies domain objects correctly, the Prompt Engine inserts variables, the Parser strips noise, and the Gemini Adapter raises exceptions when missing API keys.
+**Prompt Given**: "Create unit tests. Test: Prompt Builder, Context Builder, Parser, Gemini Adapter (mock responses only). Do NOT make real API calls during tests."
+**Reasoning**: Unit testing the AI integration logic independently of the external LLM ensures the system's structural integrity. Mocking environment variables and responses prevents CI/CD pipelines from failing due to missing secrets or network issues.
+**AI Output Summary**: Created `test_ai.py` under `backend/tests/`. Added fixtures for domain models and wrote tests for `PromptEngine`, `ContextBuilder`, `ResponseParser`, and `GeminiAdapter` (using Pytest's `monkeypatch` to simulate missing and present API keys).
+**Architecture Decisions**: 
+- Used Pytest `monkeypatch` to manipulate the environment for the GeminiAdapter tests to ensure no real secrets are needed or leaked.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/tests/test_ai.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: test(ai): add ai unit tests
+**Testing Performed**: Executed `pytest backend/tests/test_ai.py`. All 6 test cases passed successfully.
+**Result**: AI abstraction layer is thoroughly tested.
+**Known Limitations**: Testing the exact outputs of LLMs is impossible; we only test our wrapper logic.
+**Next Planned Milestone**: 4 (Subtask: Update Architecture Docs)
