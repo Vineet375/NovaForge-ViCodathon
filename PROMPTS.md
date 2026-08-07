@@ -401,3 +401,29 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Adapter structure is ready for future integration.
 **Known Limitations**: Currently returns mock strings; actual Google Generative AI SDK will need to be added later.
 **Next Planned Milestone**: 4 (Subtask: Prompt Response Parser)
+
+---
+
+## Prompt 16
+**Timestamp**: 2026-08-07T21:51:20+05:30
+**Milestone**: 4 - AI Prompt Engine & LLM Abstraction Layer
+**Objective**: Create Prompt Response Parser.
+**Context**: Language models often return chatty or inconsistently formatted text (e.g., "Here is the question: ..."). The engine needs robust logic to strip noise and validate outputs before converting them into domain entities.
+**Prompt Given**: "Create Prompt Response Parser. Responsibilities: Validate LLM responses. Handle malformed outputs. Normalize responses. Convert responses into domain models."
+**Reasoning**: Decoupling the parsing logic ensures that if the LLM provider changes its response style, we only need to update the regex/parsing logic in one isolated place rather than scattering cleaning logic throughout the application.
+**AI Output Summary**: Created `response_parser.py`. Built static methods `parse_question` and `parse_evaluation` that use regex to strip out common conversational prefixes and validate that the remaining string is not empty, raising `InvalidResponseException` if it is.
+**Architecture Decisions**: 
+- Opted for static methods as the parser is stateless.
+- Isolated string manipulation into this single layer to protect domain models from bad data.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/services/ai/response_parser.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None (Used standard library `re`)
+**Git Commit Message**: feat(ai): implement response parser
+**Testing Performed**: Code syntax check.
+**Result**: LLM responses can now be safely normalized.
+**Known Limitations**: Regex patterns might need expansion based on actual LLM behavior in production.
+**Next Planned Milestone**: 4 (Subtask: AI Service Layer)
