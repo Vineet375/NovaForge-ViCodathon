@@ -8,38 +8,42 @@ AB Talks ViCodathon 2026
 **Team**: NovaForge
 
 ## Tech Stack
-- **Frontend**: Next.js, React, TypeScript, Tailwind CSS, shadcn/ui
+- **Frontend**: Next.js, React, TypeScript, Tailwind CSS (v4), shadcn/ui
 - **Backend**: Python, FastAPI, Pydantic
 - **AI**: Google Generative AI (Gemini)
 
 ---
 
-## System Architecture
+## Frontend Architecture & Design System (Milestone 8)
 
-The backend is designed using a clean, modular, and decoupled architecture. The goal is to separate domain logic from the AI engine and the API delivery layer.
+The frontend for NovaForge follows a strict, highly reusable design philosophy inspired by modern SaaS products (e.g., Vercel, Linear, Stripe). The design communicates a premium, AI-first, fast, and accessible enterprise experience.
 
-- **API (`backend/api/`)**: FastAPI routers exposing REST endpoints (`health`, `candidate`, `curriculum`, `interview`). Uses Dependency Injection to initialize and supply repositories and services.
-- **Domain (`backend/services/domain/`)**: Pure business logic that drives the interview process without LLM dependency. Includes `SessionManager`, `DifficultyStrategy`, and `TopicSelectionStrategy`.
-- **AI Layer (`backend/services/ai/`)**: Integrates LLMs securely.
-  - `LLMProvider`: Abstract interface for dependency inversion.
-  - `GeminiAdapter`: Concrete implementation connecting to Google Gen AI with retry policies.
-  - `PromptEngine`: Houses string templates designed to force structured JSON outputs.
-  - `ContextBuilder`: Serializes complex domain models (like `Candidate` and `Curriculum`) into optimized context strings for the LLM.
-  - `ResponseParser`: Cleans and validates incoming LLM text into safe, predictable dictionary formats.
-- **Services (`backend/services/`)**: Contains the `DataLoader` which caches the initial state and Repositories (`CandidateRepository`, `CurriculumRepository`) for in-memory reads.
-- **Models (`backend/models/`)**: Pydantic models for enforcing strict data validation and typing for entities (`Candidate`, `Curriculum`, `InterviewSession`).
-- **Data (`backend/data/`)**: Static JSON data stores provided by the hackathon.
+### Design Tokens
+Our core design tokens are centralized in `frontend/src/app/globals.css`, leveraging Tailwind CSS v4's native CSS variable support:
+- **Typography Scale**: Built natively using the `Geist` and `Geist Mono` font families for maximum legibility and modern aesthetics.
+- **Color Palette**: A curated semantic color scale featuring deep indigo/navy as the primary brand color, combined with monochromatic grays for structure, allowing content to breathe.
+- **Shadows & Elevation**: Custom `--shadow-premium` variables provide a subtle depth layered look for cards, dropdowns, and interactive elements.
+- **Theme Support**: Seamless native dark mode integration with full persistence using `next-themes`. Variables gracefully switch from a clean white light theme to a deep, OLED-friendly dark theme.
+
+### Reusable UI Foundations
+Instead of building monolithic pages, the frontend is assembled using tightly-scoped, reusable components located in `frontend/src/components`:
+- **Layout System (`layout-foundation.tsx`)**: Exposes wrappers like `PageContainer`, `Section`, `SectionHeader`, and `SectionTitle` that instantly align margins, paddings, and widths identically across all future pages.
+- **Navigation (`navbar.tsx`, `sidebar.tsx`)**: Reusable shells for top and side navigation that integrate seamlessly with the Layout foundation.
+- **Cards (`card.tsx`)**: Premium bounding boxes with integrated hover animations and shadow drops.
+- **Buttons (`button.tsx`)**: Extends primitive buttons to include a `LoadingButton` variant with integrated spinners and disabled states.
+- **Skeletons (`skeleton.tsx`)**: Reusable loading placeholder blocks (`CardSkeleton`, `PageHeaderSkeleton`) to prevent layout shifts during asynchronous state transitions.
+- **Theme Toggle (`theme-toggle.tsx`)**: Accessible toggle that triggers rapid UI recoloring with subtle icon animations.
+
+All components adhere strictly to accessibility standards (ARIA roles, robust focus rings, high contrast text).
 
 ---
 
-## End-to-End Flow
+## Backend Architecture
 
-1. **Start Session**: A client requests an interview for a specific Candidate ID via `POST /interview/start`. The `SessionManager` initializes a session, calculates difficulty, and plans 4 topics to cover.
-2. **Next Question**: `POST /interview/{session_id}/next`. The `AIService` parses the curriculum and candidate context, then generates a highly targeted question matching the planned topic and difficulty level.
-3. **Answer Question**: `POST /interview/{session_id}/answer`. The `AIService` evaluates the answer, generating a score out of 10.
-4. **Follow Up (Optional)**: If the LLM determines the answer was incomplete, it flags `follow_up_required`. The backend automatically generates a follow-up question in the same cycle.
-5. **Completion**: Once 8 questions are answered successfully, the session is marked as `COMPLETED`.
-6. **Feedback**: `GET /interview/{session_id}/feedback` triggers the LLM to generate a comprehensive report of the candidate's performance, strengths, weaknesses, and a recommended learning path.
+The backend is strictly decoupled into layers:
+- **API (`backend/api/`)**: FastAPI routing layer exposing REST resources.
+- **Domain (`backend/services/domain/`)**: Pure state machine driving logic without external AI dependency (`SessionManager`).
+- **AI Layer (`backend/services/ai/`)**: Specialized handlers (`PromptEngine`, `ContextBuilder`, `ResponseParser`, `GeminiAdapter`) that safely constrain unpredictable LLM outputs into structured JSON.
 
 ---
 
@@ -47,7 +51,7 @@ The backend is designed using a clean, modular, and decoupled architecture. The 
 
 ### Prerequisites
 - Node.js (for Frontend)
-- Python 3.9+ (for Backend)
+- Python 3.13+ (for Backend)
 
 ### API Keys
 Create a `.env` file in the project root:
@@ -57,6 +61,7 @@ GEMINI_API_KEY=your_google_gen_ai_key_here
 > **Warning**: Never commit your real API key to version control.
 
 ### Installation
+
 #### Backend
 ```bash
 cd backend
@@ -77,46 +82,20 @@ npm install
 
 ---
 
-## Testing Instructions
+## Testing
 
-The backend relies heavily on `pytest`. We use the `TestClient` from FastAPI to run end-to-end integration tests entirely in-memory.
-
-To run the complete test suite:
+### Backend
+The backend utilizes `pytest` with the FastAPI `TestClient` for 100% in-memory validation of domain logic and API routes.
 ```bash
 cd backend
 venv\Scripts\activate
 pytest
 ```
 
-The test suite includes:
-- **`test_domain.py`**: Validates the core business logic, session state transitions, difficulty calculators, and topic strategies completely isolated from external dependencies.
-- **`test_ai.py`**: Verifies that the PromptEngine creates correct templates and the ResponseParser cleanly handles malformed JSON outputs.
-- **`test_api.py`**: End-to-end integration tests that simulate a complete 8-question interview flow, checking HTTP response codes, JSON schemas, and invalid state rejections (like attempting to answer a question that hasn't been asked).
-
----
-
-## API Testing
-
-You can use standard tools like `curl`, Postman, or the built-in Swagger UI.
-
-1. Start the server:
+### Frontend
+The frontend codebase enforces extreme strictness via TypeScript and Next.js builds.
 ```bash
-cd backend
-uvicorn main:app --reload
+cd frontend
+npm run build
 ```
-
-2. Visit the interactive Swagger Docs:
-[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-
----
-
-## Troubleshooting
-
-- **`ModuleNotFoundError: No module named 'backend'` when running pytest**
-  Ensure you are running `pytest` with the root directory in your PYTHONPATH. The provided `pytest.ini` handles this automatically, but ensure it's in the root of the project.
-- **`MissingAPIKeyException` when starting the server**
-  Ensure your `.env` file is properly configured with a `GEMINI_API_KEY` and you have `python-dotenv` installed.
-- **FastAPI 500 Errors during `/interview/next`**
-  Check the application logs. If the Gemini API is timing out or failing due to rate limits, the `GeminiAdapter` will retry 3 times before bubbling up the exception.
-- **Next.js Hydration Errors**
-  If accessing the frontend over a local network, ensure your IP is whitelisted in `next.config.ts` under `allowedDevOrigins`. Browser extensions injecting scripts into the body tag may also cause hydration mismatches.
+The build process statically analyzes, typchecks, and compiles all SCSS and TS modules, guaranteeing deployment readiness.
