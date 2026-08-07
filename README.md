@@ -1,4 +1,5 @@
 # NovaForge AI Interview Agent
+ViCodathon 2026 – India's AI-First 48 Hour Vibe Coding Hackathon! 
 
 An AI Interview Agent that conducts personalized technical interviews based on a candidate's learning journey.
 
