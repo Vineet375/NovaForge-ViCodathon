@@ -1,6 +1,6 @@
 import pytest
 from backend.models.candidate import Candidate, Member, Mission, Signals
-from backend.models.curriculum import Curriculum, Module, Day
+from backend.models.curriculum import Curriculum, Day
 from backend.models.interview import QuestionDifficulty, InterviewState, AskedQuestion, PlannedQuestion, QuestionCategory
 from backend.services.domain.strategies import DifficultyStrategy, TopicSelectionStrategy
 from backend.services.domain.session_manager import SessionManager

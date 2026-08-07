@@ -5,9 +5,9 @@ from backend.services.ai.context_builder import ContextBuilder
 from backend.services.ai.response_parser import ResponseParser
 from backend.services.ai.gemini_adapter import GeminiAdapter
 from backend.services.ai.exceptions import MissingAPIKeyException, InvalidResponseException
-from backend.models.candidate import Candidate, Member, Mission, Signals
+from backend.models.candidate import Candidate, Member, Signals
 from backend.models.curriculum import Curriculum, Day
-from backend.models.interview import InterviewSession, AskedQuestion, PlannedQuestion, QuestionCategory, QuestionDifficulty
+from backend.models.interview import InterviewSession
 
 @pytest.fixture
 def sample_candidate():

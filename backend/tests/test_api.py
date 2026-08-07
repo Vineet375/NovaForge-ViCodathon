@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 from backend.main import app
-from backend.api.schemas import StartInterviewRequest
 
 client = TestClient(app)
 

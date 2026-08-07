@@ -731,3 +731,38 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Real AI integration is complete, stable, and covered by unit tests.
 **Known Limitations**: Real API latency is not simulated in tests.
 **Next Planned Milestone**: 7 (Frontend Integration)
+
+---
+
+## Prompt 28
+**Timestamp**: 2026-08-08T00:15:00+05:30
+**Milestone**: 7 - End-to-End Integration Testing & Backend Validation
+**Objective**: Validate the full backend system from end-to-end, handle invalid state transitions securely, and perform extensive code quality checks.
+**Context**: With real AI integrated, the backend must prove robust enough for production deployment. This involves adding complete E2E flow tests, tightening state management in the domain logic, ensuring the API properly rejects invalid actions, and updating all documentation to reflect the finalized architecture.
+**Prompt Given**: "Milestone 7: End-to-End Integration Testing & Backend Validation... Verify integration... Validate interview state transitions... API Validation... Testing... Code Quality Review... Documentation"
+**Reasoning**: An interview session spans multiple state changes (Not Started -> In Progress -> Completed). We discovered during E2E testing that automatically completing the session when the 8th question was *generated* caused the subsequent submission of the 8th *answer* to fail with a 400 Bad Request. By migrating the completion logic to the post-answer evaluation phase, the state machine aligns perfectly with the intended HTTP flow. Removing dead code and unused imports ensures the codebase remains maintainable.
+**AI Output Summary**: 
+- Added an exhaustive E2E integration test \	est_full_interview_flow\ in \	est_api.py\ simulating an 8-question lifecycle.
+- Identified and resolved a critical state transition bug in \SessionManager\ and \interview.py\ where sessions closed prematurely.
+- Added strict transition tests to verify that answering un-asked questions returns \400 Bad Request\.
+- Ran static analysis (\lake8\) across the backend and removed all unused imports and dead code.
+- Completely rewrote \README.md\ to provide deep technical documentation on the architecture, setup, testing, and troubleshooting.
+**Architecture Decisions**: 
+- Re-aligned state mutation responsibility: \SessionManager.update_progress\ no longer auto-completes. The router (\nswer_question\) evaluates if the session requirements are met (8 questions + no follow-up required) and explicitly commands the manager to complete the session.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: None
+**Files Modified**: 
+- \ackend/api/routers/interview.py\
+- \ackend/services/domain/session_manager.py\
+- \ackend/tests/test_api.py\
+- \ackend/tests/test_domain.py\
+- \ackend/tests/test_ai.py\
+- \README.md\
+- \PROMPTS.md\
+**Dependencies Added**: None
+**Git Commit Message**: docs: update integration documentation and finalize backend validation
+**Testing Performed**: Executed \pytest\ successfully across all layers (17/17 tests passing). Ran \lake8\ to verify code quality.
+**Result**: Backend is fully integrated, verified, documented, and production-ready.
+**Known Limitations**: Real API latency is not simulated in tests.
+**Next Planned Milestone**: 8 (Frontend Integration)
