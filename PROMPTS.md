@@ -247,3 +247,31 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Session management lifecycle implemented.
 **Known Limitations**: All state is lost on server restart. A persistence layer will be required for production.
 **Next Planned Milestone**: 3 (Subtask: Answer Evaluation Interface and Tests)
+
+---
+
+## Prompt 10
+**Timestamp**: 2026-08-07T21:39:00+05:30
+**Milestone**: 3 - Core Interview Domain
+**Objective**: Create Answer Evaluation interface and write domain unit tests.
+**Context**: To decouple the AI from the domain logic, we need clean abstract interfaces that future milestones will implement. Then we must rigorously test the domain logic written so far.
+**Prompt Given**: "Create Answer Evaluation Interface. Do NOT evaluate answers. Create clean interfaces/classes that future AI implementations can use. Create unit tests for Session creation, Difficulty calculation, Topic planning, Session completion."
+**Reasoning**: Interface segregation prevents the domain from being tightly coupled to an LLM provider (like OpenAI or Gemini). Unit tests guarantee that the complex domain logic (like topic selection and difficulty heuristics) works as expected before integration.
+**AI Output Summary**: Created `evaluation_interface.py` with an abstract base class `AnswerEvaluationInterface`. Created `test_domain.py` utilizing `pytest` to test the strategies and the session manager end-to-end.
+**Architecture Decisions**: 
+- Used Python's built-in `abc` module for strict abstract classes, forcing future LLM services to implement the required methods.
+- Placed tests under `backend/tests/` to keep test files out of the production source tree.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/services/domain/evaluation_interface.py`
+- `backend/tests/__init__.py`
+- `backend/tests/test_domain.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None (Installed `pytest` in the local virtual environment)
+**Git Commit Message**: test(domain): add interview domain tests and evaluation interface
+**Testing Performed**: Executed `pytest backend/tests`. All 3 test suites passed successfully.
+**Result**: Domain logic is fully verified and decoupled from AI implementations.
+**Known Limitations**: None
+**Next Planned Milestone**: 4 (API Layer & Interview Logic)
