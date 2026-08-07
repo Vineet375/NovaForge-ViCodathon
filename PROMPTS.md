@@ -552,3 +552,31 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Pytest works seamlessly from any directory within the project.
 **Known Limitations**: None
 **Next Planned Milestone**: 5 (API Layer & Core Integration)
+
+---
+
+## Prompt 22
+**Timestamp**: 2026-08-07T22:28:00+05:30
+**Milestone**: 5 - API Layer + Core Integration
+**Objective**: Create API schemas and dependency injection modules.
+**Context**: We need to define strict data contracts for the API and decouple repository/service initialization from route handlers.
+**Prompt Given**: "Create proper request and response schemas. Use Pydantic... Dependency Injection: Create clean dependency providers."
+**Reasoning**: Establishing schemas first ensures API requests and responses are strictly validated before hitting business logic. Dependency injection prevents global state mutations during testing and isolates domain dependencies from the FastAPI routers.
+**AI Output Summary**: Created `backend/api/schemas.py` defining models like `StartInterviewRequest` and `AnswerResponse`. Created `backend/api/dependencies.py` which instantiates repositories and the AI Service using a mocked LLM provider for this milestone. Added dotenv loading to handle dummy API keys during local dev.
+**Architecture Decisions**: 
+- Separated API schemas from domain models to prevent leaky abstractions (API shouldn't directly expose internal data structures without a DTO layer where appropriate).
+- Used FastAPI's `Depends` for typed Dependency Injection.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/api/__init__.py`
+- `backend/api/schemas.py`
+- `backend/api/dependencies.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(api): add api schemas and dependency injection
+**Testing Performed**: Ran `python -c "import backend.api.dependencies"` which executed without errors, proving instantiation logic and mock initialization works.
+**Result**: Core API foundation is laid out.
+**Known Limitations**: `GEMINI_API_KEY` is temporarily mocked if missing to prevent boot failures.
+**Next Planned Milestone**: 5 (Subtask: Health and Core Routers)
