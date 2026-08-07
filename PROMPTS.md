@@ -427,3 +427,28 @@ Successfully executed Git operations without modifying application source code.
 **Result**: LLM responses can now be safely normalized.
 **Known Limitations**: Regex patterns might need expansion based on actual LLM behavior in production.
 **Next Planned Milestone**: 4 (Subtask: AI Service Layer)
+
+---
+
+## Prompt 17
+**Timestamp**: 2026-08-07T21:52:00+05:30
+**Milestone**: 4 - AI Prompt Engine & LLM Abstraction Layer
+**Objective**: Create AI Service Layer.
+**Context**: We need a facade that brings together the domain models, the context builder, the prompt engine, the LLM provider, and the response parser into a single cohesive service.
+**Prompt Given**: "Create AI Service Layer. Responsibilities: Connect Prompt Engine. Connect Domain. Connect Gemini Adapter. Return strongly typed objects."
+**Reasoning**: Using the facade pattern hides the complex orchestration of building context, templating prompts, making API calls, and parsing strings from the rest of the application.
+**AI Output Summary**: Created `ai_service.py`. Implemented the `AnswerEvaluationInterface` from the domain layer. The `AIService` orchestrates the `ContextBuilder`, `PromptEngine`, injected `LLMProvider`, and `ResponseParser` to return strongly typed domain objects.
+**Architecture Decisions**: 
+- Used Dependency Injection (`__init__(self, provider: LLMProvider)`) to decouple the service from the concrete `GeminiAdapter`. This allows easy mocking during tests.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/services/ai/ai_service.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(ai): implement ai service layer
+**Testing Performed**: Code syntax check.
+**Result**: Complete end-to-end AI abstraction layer is ready.
+**Known Limitations**: None
+**Next Planned Milestone**: 4 (Subtask: AI Unit Tests)
