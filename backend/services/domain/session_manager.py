@@ -72,10 +72,6 @@ class SessionManager:
         if session.planned_topics:
             idx = session.current_question_number % len(session.planned_topics)
             session.current_curriculum_day = session.planned_topics[idx]
-        
-        # Heuristic completion logic: if they've answered 8 questions
-        if session.current_question_number >= 8:
-            self.complete_session(session_id)
             
         return session
         

@@ -61,4 +61,8 @@ def test_session_manager(sample_candidate, sample_curriculum):
     for i in range(7):
         manager.update_progress(session.session_id, q)
         
+    assert session.current_question_number == 8
+    
+    # Complete manually as router handles this now
+    manager.complete_session(session.session_id)
     assert session.status == InterviewState.COMPLETED

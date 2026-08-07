@@ -84,3 +84,53 @@ def test_interview_flow():
     assert state_data["status"] == "in_progress"
     assert state_data["current_question_number"] == 1
     assert len(state_data["questions_asked"]) == 1
+
+def test_full_interview_flow():
+    # 1. Get a valid candidate
+    candidates = client.get("/candidates").json()
+    candidate_id = candidates[1]["member"]["id"]
+    
+    # 2. Start Interview
+    req = {"candidate_id": candidate_id}
+    start_resp = client.post("/interview/start", json=req)
+    session_id = start_resp.json()["session_id"]
+    
+    # Run through 8 questions
+    for i in range(8):
+        next_resp = client.post(f"/interview/{session_id}/next")
+        assert next_resp.status_code == 200
+        
+        ans_req = {"answer_text": "This is a test answer."}
+        ans_resp = client.post(f"/interview/{session_id}/answer", json=ans_req)
+        assert ans_resp.status_code == 200
+        
+    state_resp = client.get(f"/interview/{session_id}")
+    assert state_resp.json()["status"] == "completed"
+    
+    # Try getting next when completed (Invalid state transition)
+    bad_next = client.post(f"/interview/{session_id}/next")
+    assert bad_next.status_code == 400
+    assert "cannot fetch next question" in bad_next.json()["detail"].lower()
+    
+    # Try answering when completed (Invalid state transition)
+    bad_ans = client.post(f"/interview/{session_id}/answer", json={"answer_text": "test"})
+    assert bad_ans.status_code == 400
+    
+    # Get Final Feedback
+    feedback = client.get(f"/interview/{session_id}/feedback")
+    assert feedback.status_code == 200
+    assert "overall_score" in feedback.json()
+
+def test_invalid_transitions():
+    candidates = client.get("/candidates").json()
+    candidate_id = candidates[2]["member"]["id"]
+    
+    req = {"candidate_id": candidate_id}
+    start_resp = client.post("/interview/start", json=req)
+    session_id = start_resp.json()["session_id"]
+    
+    # Try to answer before getting the first question
+    ans_req = {"answer_text": "This is a test answer."}
+    ans_resp = client.post(f"/interview/{session_id}/answer", json=ans_req)
+    assert ans_resp.status_code == 400
+    assert "No question has been asked yet" in ans_resp.json()["detail"]

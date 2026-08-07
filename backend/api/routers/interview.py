@@ -121,6 +121,10 @@ def answer_question(
             # We don't crash the main answer submission if follow-up fails
             pass
             
+    # Complete session if we've reached 8 questions and no follow-up is required
+    if session.current_question_number >= 8 and not follow_up_text:
+        session_manager.complete_session(session_id)
+            
     return AnswerResponse(
         feedback=current_question.feedback,
         follow_up_question=follow_up_text
