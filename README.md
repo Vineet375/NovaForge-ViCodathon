@@ -23,7 +23,7 @@ The backend is designed using a clean, modular architecture:
 - **Domain (`backend/services/domain/`)**: Pure business logic (e.g., `SessionManager`, `DifficultyStrategy`, `TopicSelectionStrategy`) that drives the interview process without LLM dependency.
 - **AI Layer (`backend/services/ai/`)**: Integrates LLMs via an abstraction layer (`LLMProvider`). Includes the `PromptEngine` for templating, `ContextBuilder` for stringifying domain models, and `ResponseParser` for cleaning outputs.
 - **Utils (`backend/utils/`)**: Helper modules for centralized file loading, structured logging, and constants.
-- **API (`backend/api/`)**: (Future) FastAPI routers for exposing endpoints to the frontend.
+- **API (`backend/api/`)**: FastAPI routers (`health`, `candidate`, `curriculum`, `interview`) exposing REST endpoints with Dependency Injection for scaling.
 - **Data (`backend/data/`)**: Static JSON data stores.
 
 ## Installation

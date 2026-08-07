@@ -637,3 +637,52 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Core interview application flow is exposed over HTTP.
 **Known Limitations**: Real AI generation is still stubbed out.
 **Next Planned Milestone**: 5 (Subtask: Error Handling & Middleware)
+
+---
+
+## Prompt 25
+**Timestamp**: 2026-08-07T23:25:00+05:30
+**Milestone**: 5 - API Layer + Core Integration
+**Objective**: Implement API tests.
+**Context**: We need to verify that all the new API endpoints function correctly and handle validation/errors properly without manually testing via Postman or curl.
+**Prompt Given**: "Testing: Create API tests. Use pytest. Test every endpoint... Ensure tests pass."
+**Reasoning**: Using `TestClient` from FastAPI allows us to test the entire application request/response lifecycle locally in memory.
+**AI Output Summary**: Created `backend/tests/test_api.py`. Wrote test functions for health check, listing candidates, fetching curriculum, error handling on invalid IDs, and an end-to-end test simulating a full interview flow (start -> next -> answer -> check state).
+**Architecture Decisions**: 
+- Leveraged the in-memory mocked state so tests run extremely fast and do not depend on external APIs or databases.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/tests/test_api.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: test(api): add comprehensive api endpoint tests
+**Testing Performed**: Executed `pytest backend/tests/test_api.py`. 6/6 tests passed in 1.78 seconds.
+**Result**: Full endpoint verification is automated.
+**Known Limitations**: The interview flow test asserts on mock responses.
+**Next Planned Milestone**: 5 (Subtask: Documentation)
+
+---
+
+## Prompt 26
+**Timestamp**: 2026-08-07T23:27:00+05:30
+**Milestone**: 5 - API Layer + Core Integration
+**Objective**: Finalize Documentation for Milestone 5.
+**Context**: We need to update the README to reflect that the API is now implemented.
+**Prompt Given**: "Update README.md and PROMPTS.md."
+**Reasoning**: Keeping documentation up-to-date with code changes ensures team alignment and easier onboarding.
+**AI Output Summary**: Updated `README.md` to move `backend/api` from "(Future)" to fully implemented, documenting the new routers.
+**Architecture Decisions**: None
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: None
+**Files Modified**: 
+- `README.md`
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: docs(backend): update README for API milestone
+**Testing Performed**: None
+**Result**: Documentation reflects the current state of the backend API.
+**Known Limitations**: None
+**Next Planned Milestone**: 6 (Real AI Integration)
