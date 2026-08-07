@@ -527,3 +527,28 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Next.js development server will now accept requests from the specified IP and ignore browser extension mutations on the body tag.
 **Known Limitations**: Extensions injecting into elements other than `<body>` or `<html>` might still cause hydration issues.
 **Next Planned Milestone**: 5 (API Layer & Core Integration)
+
+---
+
+## Prompt 21
+**Timestamp**: 2026-08-07T22:20:00+05:30
+**Milestone**: Testing Configuration
+**Objective**: Fix `pytest` ModuleNotFoundError when running tests from the backend directory.
+**Context**: The user attempted to run `pytest` inside the `backend` directory, which resulted in Python failing to resolve `backend.xxx` imports because the Python path did not include the root directory.
+**Prompt Given**: "solve this" (with pytest error logs)
+**Reasoning**: Adding a `pytest.ini` file at the root of the project with `pythonpath = .` and `testpaths = backend/tests` tells pytest to treat the project root as the base path for imports, regardless of which subdirectory the user executes the `pytest` command from.
+**AI Output Summary**: Created `pytest.ini` in the root directory configured to resolve Python imports correctly and locate the tests inside `backend/tests`.
+**Architecture Decisions**: 
+- Placed `pytest.ini` in the root directory as per standard Python project conventions, ensuring all subsequent modules (like the API or scripts) can be tested seamlessly.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `pytest.ini`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: fix(backend): add pytest.ini to resolve module imports
+**Testing Performed**: Ran `pytest` from the `backend` directory. Verified that all 9 tests passed in 0.08s.
+**Result**: Pytest works seamlessly from any directory within the project.
+**Known Limitations**: None
+**Next Planned Milestone**: 5 (API Layer & Core Integration)
