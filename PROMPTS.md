@@ -168,3 +168,29 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Milestone 2 fully complete and documented.
 **Known Limitations**: None
 **Next Planned Milestone**: 3 (API Layer & Interview Logic)
+
+---
+
+## Prompt 7
+**Timestamp**: 2026-08-07T21:35:00+05:30
+**Milestone**: 3 - Core Interview Domain
+**Objective**: Create Interview Session, State, and Question Planning models.
+**Context**: Starting the core domain layer of the interview engine. We need to represent the state of an interview session and structure the planned/asked questions robustly before implementing business logic.
+**Prompt Given**: "Create Interview Session models... Create Interview State models... Create Question Planning models..."
+**Reasoning**: Defining clear, strict types for the interview state ensures that the business logic can rely on a consistent data structure without fear of invalid states. Pydantic models with Enums provide strong validation.
+**AI Output Summary**: Created `backend/models/interview.py` with Enums (`InterviewState`, `QuestionDifficulty`, `QuestionCategory`) and Pydantic models (`PlannedQuestion`, `AskedQuestion`, `InterviewSession`).
+**Architecture Decisions**: 
+- Used Enums to prevent invalid strings for states, difficulties, and categories.
+- Stored `AskedQuestion` inside the `InterviewSession` to keep all session state encapsulated in a single domain object.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/models/interview.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(domain): add interview session models
+**Testing Performed**: Code syntax check.
+**Result**: Core models created successfully.
+**Known Limitations**: None
+**Next Planned Milestone**: 3 (Subtask: Difficulty Strategy)
