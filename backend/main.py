@@ -16,6 +16,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from backend.api.routers import health, candidate, curriculum
+
+app.include_router(health.router)
+app.include_router(candidate.router)
+app.include_router(curriculum.router)
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to NovaForge AI Interview Agent API"}

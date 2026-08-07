@@ -580,3 +580,33 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Core API foundation is laid out.
 **Known Limitations**: `GEMINI_API_KEY` is temporarily mocked if missing to prevent boot failures.
 **Next Planned Milestone**: 5 (Subtask: Health and Core Routers)
+
+---
+
+## Prompt 23
+**Timestamp**: 2026-08-07T23:23:00+05:30
+**Milestone**: 5 - API Layer + Core Integration
+**Objective**: Create Health, Candidate, and Curriculum routers.
+**Context**: We need to start exposing the core data layers via REST APIs.
+**Prompt Given**: "Create API routers. Example: health.py, candidate.py, curriculum.py... Wire together... FastAPI Router"
+**Reasoning**: Keeping the endpoints segmented by resource aligns with RESTful design principles and prevents `main.py` from becoming bloated.
+**AI Output Summary**: Created `backend/api/routers/health.py`, `candidate.py`, and `curriculum.py`. Registered them in `backend/main.py`. The endpoints safely use the dependency injected repositories to return strictly typed Pydantic models.
+**Architecture Decisions**: 
+- Added an `__init__.py` to the routers package to keep Python imports clean.
+- Used `APIRouter` to namespace paths (e.g. `/candidates`, `/health`, `/curriculum`) and applied OpenAPI tags for better documentation.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/api/routers/__init__.py`
+- `backend/api/routers/health.py`
+- `backend/api/routers/candidate.py`
+- `backend/api/routers/curriculum.py`
+**Files Modified**: 
+- `backend/main.py`
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(api): implement health, candidate, and curriculum routers
+**Testing Performed**: Ran `python -c "import backend.main"` to verify that FastAPI initializes properly with the newly included routers and no circular dependencies exist.
+**Result**: Read-only core APIs are wired to the data layer.
+**Known Limitations**: None
+**Next Planned Milestone**: 5 (Subtask: Interview APIs)
