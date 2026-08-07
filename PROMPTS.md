@@ -477,3 +477,27 @@ Successfully executed Git operations without modifying application source code.
 **Result**: AI abstraction layer is thoroughly tested.
 **Known Limitations**: Testing the exact outputs of LLMs is impossible; we only test our wrapper logic.
 **Next Planned Milestone**: 4 (Subtask: Update Architecture Docs)
+
+---
+
+## Prompt 19
+**Timestamp**: 2026-08-07T21:53:00+05:30
+**Milestone**: 4 - AI Prompt Engine & LLM Abstraction Layer
+**Objective**: Update architecture documentation for the AI layer.
+**Context**: Concluding Milestone 4 by ensuring `README.md` reflects the newly created `ai` package and its core responsibilities.
+**Prompt Given**: "Review architecture... docs(ai): update architecture"
+**Reasoning**: Keeping documentation synchronized ensures developers understand the boundary between pure domain logic and external AI integrations.
+**AI Output Summary**: Updated `README.md` to explicitly list the `backend/services/ai/` directory, highlighting the `LLMProvider`, `PromptEngine`, `ContextBuilder`, and `ResponseParser`.
+**Architecture Decisions**: None for this specific task.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: None
+**Files Modified**: 
+- `README.md`
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: docs(ai): update architecture
+**Testing Performed**: None
+**Result**: Documentation accurately reflects Milestone 4's completion.
+**Known Limitations**: None
+**Next Planned Milestone**: 5 (API Layer & Core Integration)

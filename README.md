@@ -21,6 +21,7 @@ The backend is designed using a clean, modular architecture:
 - **Models (`backend/models/`)**: Pydantic models for enforcing strict data validation and typing for entities like `Candidate` and `Curriculum`, as well as `InterviewSession` and domain logic states.
 - **Services (`backend/services/`)**: Contains the `DataLoader` and Repositories (`CandidateRepository`, `CurriculumRepository`).
 - **Domain (`backend/services/domain/`)**: Pure business logic (e.g., `SessionManager`, `DifficultyStrategy`, `TopicSelectionStrategy`) that drives the interview process without LLM dependency.
+- **AI Layer (`backend/services/ai/`)**: Integrates LLMs via an abstraction layer (`LLMProvider`). Includes the `PromptEngine` for templating, `ContextBuilder` for stringifying domain models, and `ResponseParser` for cleaning outputs.
 - **Utils (`backend/utils/`)**: Helper modules for centralized file loading, structured logging, and constants.
 - **API (`backend/api/`)**: (Future) FastAPI routers for exposing endpoints to the frontend.
 - **Data (`backend/data/`)**: Static JSON data stores.
