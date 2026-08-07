@@ -349,3 +349,29 @@ Successfully executed Git operations without modifying application source code.
 **Result**: LLM context string building is implemented.
 **Known Limitations**: Long interview histories might exceed token limits in the future; truncation logic might be needed later.
 **Next Planned Milestone**: 4 (Subtask: LLM Provider Interface)
+
+---
+
+## Prompt 14
+**Timestamp**: 2026-08-07T21:50:00+05:30
+**Milestone**: 4 - AI Prompt Engine & LLM Abstraction Layer
+**Objective**: Create LLM Provider Interface and robust custom exceptions.
+**Context**: To prevent vendor lock-in with a specific LLM provider (e.g., Gemini vs OpenAI), we need an abstract interface that strictly defines the contract for AI text generation. We also need custom exceptions to handle the myriad of ways external APIs can fail.
+**Prompt Given**: "Create LLM Provider Interface... Implement robust exception handling. Create custom exceptions for: LLM Failure, Invalid Response, Timeout, Missing API Key"
+**Reasoning**: Defining this interface using Python's `abc` enforces the Dependency Inversion Principle. The application depends on `LLMProvider`, not Gemini, meaning swapping to Claude or OpenAI in the future requires zero changes to the core domain or AI service logic.
+**AI Output Summary**: Created `llm_provider.py` with an abstract base class `LLMProvider` defining methods for generating questions, evaluating answers, and giving feedback. Created `exceptions.py` containing custom exceptions inheriting from `AIEngineException`.
+**Architecture Decisions**: 
+- Grouped custom exceptions in a dedicated `exceptions.py` module to allow centralized error handling later on (e.g., global FastAPI exception handlers).
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/services/ai/exceptions.py`
+- `backend/services/ai/llm_provider.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(ai): create llm provider interface and custom exceptions
+**Testing Performed**: Code syntax check.
+**Result**: Interface boundary and exception handling structures are established.
+**Known Limitations**: None
+**Next Planned Milestone**: 4 (Subtask: Gemini Adapter)
