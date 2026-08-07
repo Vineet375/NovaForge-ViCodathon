@@ -1,9 +1,26 @@
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.api.schemas import StartInterviewRequest
 
 client = TestClient(app)
+
+# We use an autouse fixture to patch _call_gemini on GeminiAdapter
+# so no tests accidentally hit the real API.
+@pytest.fixture(autouse=True)
+def mock_gemini():
+    with patch("backend.services.ai.gemini_adapter.GeminiAdapter._call_gemini") as mock:
+        # Provide a default valid JSON response depending on the prompt
+        def side_effect(prompt):
+            if "feedback" in prompt.lower() and "score" in prompt.lower() and "follow_up" in prompt.lower():
+                return '{"feedback": "Good answer.", "score": 8, "follow_up_required": false, "confidence": "high"}'
+            elif "overall_score" in prompt.lower():
+                return '{"overall_score": 85, "strengths": ["a"], "weaknesses": ["b"], "improvement_topics": ["c"], "recommended_learning_path": "d", "curriculum_references": ["e"], "confidence_level": "high", "interview_summary": "Great"}'
+            else:
+                return '{"question_text": "What is React?"}'
+        mock.side_effect = side_effect
+        yield mock
 
 def test_health_endpoint():
     response = client.get("/health")

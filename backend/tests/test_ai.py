@@ -46,7 +46,7 @@ def test_context_builder(sample_candidate, sample_curriculum, sample_session):
     assert "Python Basics" in context
 
 def test_response_parser_clean():
-    raw = 'Here is your question: "What is Python?"'
+    raw = '```json\n{"question_text": "What is Python?"}\n```'
     parsed = ResponseParser.parse_question(raw)
     assert parsed == "What is Python?"
 
@@ -59,8 +59,12 @@ def test_gemini_adapter_missing_key(monkeypatch):
     with pytest.raises(MissingAPIKeyException):
         GeminiAdapter()
 
+# We can skip testing the actual mock response since we removed the mock string,
+# or we can mock _call_gemini here too.
+from unittest.mock import patch
 def test_gemini_adapter_mock_response(monkeypatch):
     monkeypatch.setenv("GEMINI_API_KEY", "dummy_key")
     adapter = GeminiAdapter()
-    res = adapter.generate_question("test prompt")
-    assert "MOCK_RESPONSE" in res
+    with patch.object(adapter, "_call_gemini", return_value='{"question_text": "MOCK"}'):
+        res = adapter.generate_question("test prompt")
+        assert "MOCK" in res

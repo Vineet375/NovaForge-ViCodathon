@@ -38,6 +38,7 @@ class SessionManager:
             candidate_id=candidate.member.id,
             status=InterviewState.NOT_STARTED,
             difficulty_level=difficulty,
+            planned_topics=topics,
             current_curriculum_day=start_day
         )
         
@@ -67,8 +68,13 @@ class SessionManager:
         session.questions_asked.append(asked_question)
         session.current_question_number += 1
         
-        # Heuristic completion logic: if they've answered 5 questions
-        if session.current_question_number >= 5:
+        # Advance topic
+        if session.planned_topics:
+            idx = session.current_question_number % len(session.planned_topics)
+            session.current_curriculum_day = session.planned_topics[idx]
+        
+        # Heuristic completion logic: if they've answered 8 questions
+        if session.current_question_number >= 8:
             self.complete_session(session_id)
             
         return session

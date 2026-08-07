@@ -31,12 +31,16 @@ class AskedQuestion(BaseModel):
     planned_question: PlannedQuestion
     answer_given: Optional[str] = None
     feedback: Optional[str] = None
+    score: Optional[int] = None
+    follow_up_required: bool = False
+    confidence: Optional[str] = None
 
 class InterviewSession(BaseModel):
     session_id: str
     candidate_id: str
     status: InterviewState = InterviewState.NOT_STARTED
     current_question_number: int = 0
+    planned_topics: List[int] = Field(default_factory=list)
     current_curriculum_day: Optional[int] = None
     current_topic: Optional[str] = None
     difficulty_level: QuestionDifficulty = QuestionDifficulty.MEDIUM

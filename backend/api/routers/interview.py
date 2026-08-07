@@ -94,18 +94,36 @@ def answer_question(
     current_question.answer_given = request.answer_text
     
     try:
-        feedback = ai_service.evaluate_answer(current_question, request.answer_text)
+        eval_data = ai_service.evaluate_answer(current_question, request.answer_text)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI Service error: {str(e)}")
         
-    current_question.feedback = feedback
+    current_question.feedback = eval_data.get("feedback", "No feedback provided.")
+    try:
+        current_question.score = int(eval_data.get("score", 0))
+    except ValueError:
+        current_question.score = 0
+    current_question.confidence = eval_data.get("confidence", "low")
     
-    # Simple heuristic for testing without real AI
-    passed = "fail" not in feedback.lower()
+    passed = current_question.score >= 5
+    follow_up_req = str(eval_data.get("follow_up_required", "false")).lower() == "true"
+    current_question.follow_up_required = follow_up_req
     
+    follow_up_text = None
+    if follow_up_req:
+        try:
+            follow_up_q = ai_service.generate_follow_up(current_question)
+            if follow_up_q:
+                # Add it to the session
+                session_manager.update_progress(session_id, follow_up_q)
+                follow_up_text = follow_up_q.question_text
+        except Exception as e:
+            # We don't crash the main answer submission if follow-up fails
+            pass
+            
     return AnswerResponse(
-        feedback=feedback,
-        follow_up_question=None
+        feedback=current_question.feedback,
+        follow_up_question=follow_up_text
     )
 
 @router.get("/{session_id}", response_model=InterviewSessionState)
@@ -120,3 +138,22 @@ def get_session(session_id: str, session_manager: SessionManagerDep):
         current_question_number=session.current_question_number,
         questions_asked=session.questions_asked
     )
+
+@router.get("/{session_id}/feedback")
+def get_feedback(
+    session_id: str,
+    session_manager: SessionManagerDep,
+    ai_service: AIServiceDep
+):
+    session = session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+        
+    if session.status != InterviewState.COMPLETED:
+        raise HTTPException(status_code=400, detail="Feedback is only available for completed sessions")
+        
+    try:
+        feedback_data = ai_service.generate_feedback(session_id)
+        return feedback_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI Service error: {str(e)}")

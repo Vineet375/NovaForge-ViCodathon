@@ -9,7 +9,11 @@ You are an expert technical interviewer.
 Context: {context}
 
 Generate an interview question for the topic '{topic}' at a '{difficulty}' difficulty level.
-Return ONLY the question text. Do not include any greetings or extraneous formatting.
+Return ONLY valid JSON. No markdown, no code fences, no explanations.
+Schema:
+{{
+  "question_text": "str (the question)"
+}}
 """
 
     @staticmethod
@@ -23,7 +27,11 @@ Original Question: {question}
 Candidate's Answer: {answer}
 
 Based on the answer, generate a single follow-up question to probe deeper or clarify a misconception.
-Return ONLY the question text. Do not include any greetings or extraneous formatting.
+Return ONLY valid JSON. No markdown, no code fences, no explanations.
+Schema:
+{{
+  "question_text": "str (the follow-up question)"
+}}
 """
 
     @staticmethod
@@ -38,6 +46,14 @@ Candidate's Answer: {answer}
 
 Evaluate the candidate's answer for accuracy and completeness. Provide constructive feedback.
 Keep the feedback concise.
+Return ONLY valid JSON. No markdown, no code fences, no explanations.
+Schema:
+{{
+  "feedback": "str (concise constructive feedback)",
+  "score": "int (0-10)",
+  "follow_up_required": "bool",
+  "confidence": "str (high, medium, low)"
+}}
 """
 
     @staticmethod
@@ -51,4 +67,16 @@ Interview History:
 {history}
 
 Provide a comprehensive summary of the candidate's performance, highlighting strengths and areas for improvement.
+Return ONLY valid JSON. No markdown, no code fences, no explanations.
+Schema:
+{{
+  "overall_score": "int (0-100)",
+  "strengths": ["str"],
+  "weaknesses": ["str"],
+  "improvement_topics": ["str"],
+  "recommended_learning_path": "str",
+  "curriculum_references": ["str"],
+  "confidence_level": "str (high, medium, low)",
+  "interview_summary": "str"
+}}
 """

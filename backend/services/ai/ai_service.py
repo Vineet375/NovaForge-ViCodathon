@@ -30,29 +30,38 @@ class AIService(AnswerEvaluationInterface):
         raw_response = self.provider.generate_question(prompt)
         return ResponseParser.parse_question(raw_response)
         
-    def evaluate_answer(self, question: AskedQuestion, candidate_answer: str) -> str:
+    def evaluate_answer(self, question: AskedQuestion, candidate_answer: str) -> dict:
         """Evaluates the given answer."""
-        prompt = PromptEngine.build_evaluation_prompt(context="Evaluation Phase", question=question.question_text, answer=candidate_answer)
+        # Using a simple context for now
+        context = "Evaluation Phase"
+        prompt = PromptEngine.build_evaluation_prompt(context=context, question=question.question_text, answer=candidate_answer)
         raw_response = self.provider.evaluate_answer(prompt)
-        return ResponseParser.parse_evaluation(raw_response)
+        return ResponseParser.parse_full_evaluation(raw_response)
         
-    def generate_follow_up(self, question: AskedQuestion) -> Optional[PlannedQuestion]:
+    def generate_follow_up(self, question: AskedQuestion) -> Optional[AskedQuestion]:
         """Generates a follow-up question."""
-        prompt = PromptEngine.build_follow_up_prompt(context="Follow-up Phase", question=question.question_text, answer=question.answer_given or "")
+        context = "Follow-up Phase"
+        prompt = PromptEngine.build_follow_up_prompt(context=context, question=question.question_text, answer=question.answer_given or "")
         raw_response = self.provider.generate_follow_up(prompt)
         parsed_q = ResponseParser.parse_question(raw_response)
         
         if not parsed_q:
             return None
             
-        return PlannedQuestion(
+        planned = PlannedQuestion(
             category=QuestionCategory.TECHNICAL, 
             difficulty=question.planned_question.difficulty,
             curriculum_day=question.planned_question.curriculum_day
         )
+        return AskedQuestion(
+            question_text=parsed_q,
+            planned_question=planned
+        )
         
-    def generate_feedback(self, session_id: str) -> str:
+    def generate_feedback(self, session_id: str) -> dict:
         """Generates session feedback."""
-        prompt = PromptEngine.build_feedback_prompt(context="Feedback Phase", history=f"Session: {session_id}")
+        context = "Feedback Phase"
+        history = f"Session: {session_id}"
+        prompt = PromptEngine.build_feedback_prompt(context=context, history=history)
         raw_response = self.provider.generate_feedback(prompt)
-        return ResponseParser.parse_evaluation(raw_response)
+        return ResponseParser.parse_final_feedback(raw_response)

@@ -58,7 +58,7 @@ def test_session_manager(sample_candidate, sample_curriculum):
     manager.update_progress(session.session_id, q)
     assert session.current_question_number == 1
     
-    for i in range(4):
+    for i in range(7):
         manager.update_progress(session.session_id, q)
         
     assert session.status == InterviewState.COMPLETED
