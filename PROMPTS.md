@@ -324,3 +324,28 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Documentation accurately reflects Milestone 3's completion.
 **Known Limitations**: None
 **Next Planned Milestone**: 4 (API Layer & Interview Logic)
+
+---
+
+## Prompt 13
+**Timestamp**: 2026-08-07T21:49:00+05:30
+**Milestone**: 4 - AI Prompt Engine & LLM Abstraction Layer
+**Objective**: Create Conversation Context Builder.
+**Context**: An LLM needs sufficient context to generate relevant technical questions. We need to extract this context from our domain models.
+**Prompt Given**: "Create Conversation Context Builder. Responsibilities: Maintain interview history, Maintain previous answers, Maintain curriculum context, Maintain candidate profile context, Produce optimized prompt context."
+**Reasoning**: Keeping the logic that flattens domain models into strings separated from the prompt templates ensures that the Prompt Engine stays clean and purely focused on instruction tuning.
+**AI Output Summary**: Created `context_builder.py`. Added methods to serialize candidate data, curriculum objectives, and full interview history into a single structured text block.
+**Architecture Decisions**: 
+- Designed `ContextBuilder` with static methods. It doesn't need to maintain its own state because the `InterviewSession` domain model is the single source of truth for history.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/services/ai/context_builder.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(ai): implement context builder
+**Testing Performed**: Code syntax check.
+**Result**: LLM context string building is implemented.
+**Known Limitations**: Long interview histories might exceed token limits in the future; truncation logic might be needed later.
+**Next Planned Milestone**: 4 (Subtask: LLM Provider Interface)
