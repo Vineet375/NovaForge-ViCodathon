@@ -144,3 +144,27 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Data successfully loads, validates, caches, and is queried correctly.
 **Known Limitations**: In-memory caching means the server must be restarted if the JSON files change during runtime.
 **Next Planned Milestone**: 2 (Subtask: Update README and verify Backend)
+
+---
+
+## Prompt 6
+**Timestamp**: 2026-08-07T21:30:00+05:30
+**Milestone**: 2 - Backend Foundation + Data Layer
+**Objective**: Update README and verify backend starts successfully.
+**Context**: Finalizing Milestone 2 by documenting the architecture and verifying that the FastAPI server can run without errors using the new models and services.
+**Prompt Given**: "Review README.md. Add a Backend Architecture section. Improve PROMPTS.md. Verify backend starts successfully."
+**Reasoning**: Keeping documentation up-to-date with architectural changes ensures onboarding is seamless. Verifying the application start confirms that no syntax or import errors were introduced during the milestone.
+**AI Output Summary**: Updated `README.md` with a detailed Backend Architecture section explaining Models, Services, Utils, API, and Data. Verified FastAPI startup using uvicorn.
+**Architecture Decisions**: None for this specific task.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: None
+**Files Modified**: 
+- `README.md`
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: docs(backend): update architecture in readme and finalize milestone 2
+**Testing Performed**: Started the backend using `uvicorn main:app` and verified it ran successfully without errors.
+**Result**: Milestone 2 fully complete and documented.
+**Known Limitations**: None
+**Next Planned Milestone**: 3 (API Layer & Interview Logic)

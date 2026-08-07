@@ -16,6 +16,14 @@ AB Talks ViCodathon 2026
 - `backend/`: FastAPI backend
 - `docs/`: Technical specifications and documentation
 
+## Backend Architecture
+The backend is designed using a clean, modular architecture:
+- **Models (`backend/models/`)**: Pydantic models for enforcing strict data validation and typing for entities like `Candidate` and `Curriculum`.
+- **Services (`backend/services/`)**: Contains the `DataLoader` for securely reading and parsing JSON files, and Repositories (`CandidateRepository`, `CurriculumRepository`) for exposing the data via clean methods.
+- **Utils (`backend/utils/`)**: Helper modules for centralized file loading, structured logging, and constants.
+- **API (`backend/api/`)**: (Future) FastAPI routers for exposing endpoints to the frontend.
+- **Data (`backend/data/`)**: Static JSON data stores.
+
 ## Installation
 
 ### Prerequisites
