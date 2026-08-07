@@ -194,3 +194,30 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Core models created successfully.
 **Known Limitations**: None
 **Next Planned Milestone**: 3 (Subtask: Difficulty Strategy)
+
+---
+
+## Prompt 8
+**Timestamp**: 2026-08-07T21:37:00+05:30
+**Milestone**: 3 - Core Interview Domain
+**Objective**: Implement Difficulty Strategy and Topic Selection Strategy.
+**Context**: We need robust algorithms to determine the appropriate starting difficulty for a candidate and select which curriculum days should be covered during the interview, ensuring gaps are targeted intentionally and strengths are respected.
+**Prompt Given**: "Create Topic Selection Strategy... Create Difficulty Strategy..."
+**Reasoning**: Extracting these algorithms into isolated strategy classes adhering to the Single Responsibility Principle prevents bloated Manager classes. It makes the domain highly testable.
+**AI Output Summary**: Created `strategies.py` under `backend/services/domain/`. Implemented `DifficultyStrategy` calculating a score based on experience, completion ratio, and success rate. Implemented `TopicSelectionStrategy` prioritizing completed topics while fulfilling the 4-topic minimum constraint.
+**Architecture Decisions**: 
+- Grouped both strategies into a single `strategies.py` module as they share the same functional domain.
+- Used static methods because these strategies act as pure functions mapping inputs (Candidate, Curriculum) to outputs without side effects.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/services/domain/strategies.py`
+- `backend/services/domain/__init__.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(domain): implement difficulty and topic selection strategies
+**Testing Performed**: Code syntax check.
+**Result**: Strategies successfully implemented.
+**Known Limitations**: Topic selection is randomized within the candidate's completed set, which is fine for variance but might not be deterministic for testing without mocking random.
+**Next Planned Milestone**: 3 (Subtask: Session Manager)
