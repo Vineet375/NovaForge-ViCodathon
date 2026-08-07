@@ -221,3 +221,29 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Strategies successfully implemented.
 **Known Limitations**: Topic selection is randomized within the candidate's completed set, which is fine for variance but might not be deterministic for testing without mocking random.
 **Next Planned Milestone**: 3 (Subtask: Session Manager)
+
+---
+
+## Prompt 9
+**Timestamp**: 2026-08-07T21:37:30+05:30
+**Milestone**: 3 - Core Interview Domain
+**Objective**: Create Session Manager for tracking interview lifecycle.
+**Context**: An interview progresses through states (start, ask questions, update answers, complete). The Session Manager tracks this lifecycle in memory for active candidates.
+**Prompt Given**: "Create Session Manager. Responsibilities: Create session, Resume session, Update progress, Store interview state in memory, Track questions answered, Detect interview completion. No persistence is required."
+**Reasoning**: Centralizing state management ensures consistent transitions and acts as the primary facade for the interview process. The `SessionManager` ties together the Candidate data, Curriculum data, and strategies.
+**AI Output Summary**: Created `session_manager.py` which holds an in-memory dictionary of active `InterviewSession` instances. It creates a session using the `DifficultyStrategy` and `TopicSelectionStrategy`, marks it as in-progress, tracks asked questions, and automatically completes it once 5 questions have been answered.
+**Architecture Decisions**: 
+- Did not implement persistence (e.g., database) as per requirements. Used a simple dictionary.
+- Implemented an idempotent-like `create_session` that returns an existing active session if one exists to prevent double-starting.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/services/domain/session_manager.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(domain): add session manager
+**Testing Performed**: Code syntax check.
+**Result**: Session management lifecycle implemented.
+**Known Limitations**: All state is lost on server restart. A persistence layer will be required for production.
+**Next Planned Milestone**: 3 (Subtask: Answer Evaluation Interface and Tests)
