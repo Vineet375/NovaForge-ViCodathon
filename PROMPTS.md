@@ -610,3 +610,30 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Read-only core APIs are wired to the data layer.
 **Known Limitations**: None
 **Next Planned Milestone**: 5 (Subtask: Interview APIs)
+
+---
+
+## Prompt 24
+**Timestamp**: 2026-08-07T23:24:00+05:30
+**Milestone**: 5 - API Layer + Core Integration
+**Objective**: Implement Interview APIs.
+**Context**: The core business logic resides in the `SessionManager` and `AIService`. We need REST endpoints to trigger interview creation, question generation, and answer submission.
+**Prompt Given**: "POST /interview/start... POST /interview/{sessionId}/next... POST /interview/{sessionId}/answer... GET /interview/{sessionId}... Wire together"
+**Reasoning**: Building the integration layer exposes the domain logic to the outside world, strictly enforcing state transition constraints (e.g. throwing an error if asking for a next question on a non-active session).
+**AI Output Summary**: Created `backend/api/routers/interview.py`. Implemented the `/start`, `/next`, `/answer`, and session retrieval endpoints using `APIRouter`. Orchestrated the `SessionManager`, `CandidateRepository`, `CurriculumRepository`, and `AIService` within the route handlers.
+**Architecture Decisions**: 
+- Enforced strict state checking (HTTP 400 Bad Request) when transitioning states in invalid ways (e.g., answering a question before one is asked).
+- Wrapped AI Service calls in `try...except` to prevent internal server errors from leaking domain-level exception traces, throwing structured HTTP 500s instead.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/api/routers/interview.py`
+**Files Modified**: 
+- `backend/main.py`
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(api): implement interview session endpoints
+**Testing Performed**: Ran `python -c "import backend.main"` to verify application boot with the new complex dependencies.
+**Result**: Core interview application flow is exposed over HTTP.
+**Known Limitations**: Real AI generation is still stubbed out.
+**Next Planned Milestone**: 5 (Subtask: Error Handling & Middleware)
