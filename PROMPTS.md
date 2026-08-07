@@ -59,3 +59,34 @@ feat: initialize project structure and setup frontend/backend foundations
 
 **Notes**
 Successfully executed Git operations without modifying application source code.
+
+---
+
+## Prompt 3
+**Timestamp**: 2026-08-07T21:21:28+05:30
+**Milestone**: 2 - Backend Foundation + Data Layer
+**Objective**: Create utility modules and configure standard logging for the backend foundation.
+**Context**: Initiating Milestone 2 by setting up common utilities (file loading, constants, logging) required before building data loaders and repositories.
+**Prompt Given**: "Create utility modules. Examples: JSON loader, File utilities, Validation helpers, Constants, Logging helper. Configure logging. Use Python logging. Readable output. No print statements."
+**Reasoning**: Clean architecture dictates that file reading and logging should be isolated in utility modules. This prevents code duplication in the data loaders.
+**AI Output Summary**: Created `logger.py` with standard Python logging, `file_utils.py` for secure JSON loading, `constants.py` for centralizing file paths, and initialized the directories.
+**Architecture Decisions**: 
+- Centralized all file paths in `constants.py` to prevent hardcoded strings.
+- Created a standard logger in `logger.py` to ensure consistent formatting across the backend.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/utils/logger.py`
+- `backend/utils/file_utils.py`
+- `backend/utils/constants.py`
+- `backend/utils/__init__.py`
+- `backend/models/__init__.py`
+- `backend/services/__init__.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None (Using standard library `logging`, `json`, `pathlib`)
+**Git Commit Message**: feat(backend): implement utility modules and central logging
+**Testing Performed**: Code syntax check.
+**Result**: Utility foundation successfully established.
+**Known Limitations**: JSON loader currently reads entire files into memory; sufficient for these small datasets.
+**Next Planned Milestone**: 2 (Subtask: Pydantic Data Models)
