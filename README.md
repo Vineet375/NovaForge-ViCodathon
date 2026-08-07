@@ -18,8 +18,9 @@ AB Talks ViCodathon 2026
 
 ## Backend Architecture
 The backend is designed using a clean, modular architecture:
-- **Models (`backend/models/`)**: Pydantic models for enforcing strict data validation and typing for entities like `Candidate` and `Curriculum`.
-- **Services (`backend/services/`)**: Contains the `DataLoader` for securely reading and parsing JSON files, and Repositories (`CandidateRepository`, `CurriculumRepository`) for exposing the data via clean methods.
+- **Models (`backend/models/`)**: Pydantic models for enforcing strict data validation and typing for entities like `Candidate` and `Curriculum`, as well as `InterviewSession` and domain logic states.
+- **Services (`backend/services/`)**: Contains the `DataLoader` and Repositories (`CandidateRepository`, `CurriculumRepository`).
+- **Domain (`backend/services/domain/`)**: Pure business logic (e.g., `SessionManager`, `DifficultyStrategy`, `TopicSelectionStrategy`) that drives the interview process without LLM dependency.
 - **Utils (`backend/utils/`)**: Helper modules for centralized file loading, structured logging, and constants.
 - **API (`backend/api/`)**: (Future) FastAPI routers for exposing endpoints to the frontend.
 - **Data (`backend/data/`)**: Static JSON data stores.

@@ -275,3 +275,27 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Domain logic is fully verified and decoupled from AI implementations.
 **Known Limitations**: None
 **Next Planned Milestone**: 4 (API Layer & Interview Logic)
+
+---
+
+## Prompt 11
+**Timestamp**: 2026-08-07T21:40:00+05:30
+**Milestone**: 3 - Core Interview Domain
+**Objective**: Update architecture documentation for the domain layer.
+**Context**: Concluding Milestone 3 by making sure `README.md` reflects the newly created `domain` package and its core responsibilities.
+**Prompt Given**: "Review architecture... docs(domain): update architecture documentation"
+**Reasoning**: Keeping documentation synchronized with codebase evolution is crucial for team onboarding and maintaining architectural clarity.
+**AI Output Summary**: Updated `README.md` to explicitly list the `backend/services/domain/` directory, highlighting that it contains pure business logic completely decoupled from LLMs.
+**Architecture Decisions**: None for this specific task.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: None
+**Files Modified**: 
+- `README.md`
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: docs(domain): update architecture documentation
+**Testing Performed**: None
+**Result**: Documentation accurately reflects Milestone 3's completion.
+**Known Limitations**: None
+**Next Planned Milestone**: 4 (API Layer & Interview Logic)
