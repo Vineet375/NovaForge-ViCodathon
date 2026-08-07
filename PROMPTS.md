@@ -90,3 +90,30 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Utility foundation successfully established.
 **Known Limitations**: JSON loader currently reads entire files into memory; sufficient for these small datasets.
 **Next Planned Milestone**: 2 (Subtask: Pydantic Data Models)
+
+---
+
+## Prompt 4
+**Timestamp**: 2026-08-07T21:24:00+05:30
+**Milestone**: 2 - Backend Foundation + Data Layer
+**Objective**: Create proper Pydantic models for the data layer.
+**Context**: Moving to data validation and typing for the backend. We need to parse the JSON files into structured objects for type safety and easy access.
+**Prompt Given**: "Create proper Pydantic models for: Candidate, Candidate Profile, Completed Missions, Skipped Missions, Curriculum, Module, Day, Learning Objective, Tools, Any nested structures required by the provided JSON files."
+**Reasoning**: Pydantic models enforce data structure and validation. Representing the raw JSON as Python objects makes the downstream repository layer much cleaner and safer to interact with.
+**AI Output Summary**: Created `curriculum.py` and `candidate.py` inside `backend/models/`. Created models for Day, Module, Curriculum, Member, Mission, Signals, Candidate, and CandidateList.
+**Architecture Decisions**: 
+- Grouped Curriculum-related models and Candidate-related models into separate files for better maintainability.
+- Made fields like `passed`, `attempts`, and `skipped` optional in the `Mission` model as they appear conditionally in `candidates.json`.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/models/curriculum.py`
+- `backend/models/candidate.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None (Using existing `pydantic` dependency)
+**Git Commit Message**: feat(backend): create pydantic models for curriculum and candidates
+**Testing Performed**: Code syntax check.
+**Result**: Data models successfully defined.
+**Known Limitations**: None
+**Next Planned Milestone**: 2 (Subtask: Data Loaders and Repositories)
