@@ -501,3 +501,29 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Documentation accurately reflects Milestone 4's completion.
 **Known Limitations**: None
 **Next Planned Milestone**: 5 (API Layer & Core Integration)
+
+---
+
+## Prompt 20
+**Timestamp**: 2026-08-07T22:10:00+05:30
+**Milestone**: Frontend Configuration
+**Objective**: Fix Next.js hydration and CORS issues on the development server.
+**Context**: The user encountered two issues accessing the frontend from a virtual machine/network IP (`192.168.56.1`): Next.js 15+ blocks cross-origin dev requests by default, and a browser extension (`wotdisconnected`) injected attributes into the `<body>` causing a React hydration mismatch.
+**Prompt Given**: "Fix the issue. Ensure the fix does not break existing architecture. Run the tests again. Commit the fix separately. Push the fix. Append the fix to PROMPTS.md."
+**Reasoning**: Adding `allowedDevOrigins` to `next.config.ts` explicitly whitelists the network IP. Adding `suppressHydrationWarning` to the `<body>` tag safely prevents React from crashing when external extensions modify the body HTML before hydration completes.
+**AI Output Summary**: Modified `next.config.ts` to include `allowedDevOrigins: ["192.168.56.1"]`. Modified `src/app/layout.tsx` to add `suppressHydrationWarning` to the `<body>` element.
+**Architecture Decisions**: 
+- Followed standard Next.js security configurations for local network access.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: None
+**Files Modified**: 
+- `frontend/next.config.ts`
+- `frontend/src/app/layout.tsx`
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: fix(frontend): allow dev cross-origin requests and suppress body hydration warnings
+**Testing Performed**: Ran `npm run build` to verify the configuration syntax is correct.
+**Result**: Next.js development server will now accept requests from the specified IP and ignore browser extension mutations on the body tag.
+**Known Limitations**: Extensions injecting into elements other than `<body>` or `<html>` might still cause hydration issues.
+**Next Planned Milestone**: 5 (API Layer & Core Integration)
