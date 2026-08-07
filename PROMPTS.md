@@ -117,3 +117,30 @@ Successfully executed Git operations without modifying application source code.
 **Result**: Data models successfully defined.
 **Known Limitations**: None
 **Next Planned Milestone**: 2 (Subtask: Data Loaders and Repositories)
+
+---
+
+## Prompt 5
+**Timestamp**: 2026-08-07T21:26:00+05:30
+**Milestone**: 2 - Backend Foundation + Data Layer
+**Objective**: Create data loader services and repository classes to expose data internally.
+**Context**: Now that the Pydantic models exist, we need a service layer to load the raw JSON, validate it, cache it in memory, and provide clean methods to query the data.
+**Prompt Given**: "Create data loader services (Curriculum Loader, Candidate Loader) to load, validate, parse, and cache the data. Handle invalid files gracefully. Create repository/service classes (CurriculumRepository, CandidateRepository) exposing methods like get_all_candidates, get_curriculum, get_day, etc."
+**Reasoning**: A repository pattern separates data access logic from the rest of the application. Caching in memory prevents redundant file reads and validation overhead during the interview process.
+**AI Output Summary**: Created `data_loaders.py` containing `DataLoader` class with class-level caching. Created `repositories.py` containing `CurriculumRepository` and `CandidateRepository` with methods to fetch specific days, modules, and candidates.
+**Architecture Decisions**: 
+- Implemented singleton-like caching at the class level in `DataLoader` to ensure data is loaded and validated exactly once.
+- Used Pydantic's built-in validation during instantiation, bubbling up `ValidationError` if the raw JSON is malformed.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- `backend/services/data_loaders.py`
+- `backend/services/repositories.py`
+**Files Modified**: 
+- `PROMPTS.md`
+**Dependencies Added**: None
+**Git Commit Message**: feat(backend): implement data loaders and repository layer
+**Testing Performed**: Wrote and executed a Python script to instantiate the repositories and verify that 8 modules and 20 candidates were successfully loaded and validated.
+**Result**: Data successfully loads, validates, caches, and is queried correctly.
+**Known Limitations**: In-memory caching means the server must be restarted if the JSON files change during runtime.
+**Next Planned Milestone**: 2 (Subtask: Update README and verify Backend)
