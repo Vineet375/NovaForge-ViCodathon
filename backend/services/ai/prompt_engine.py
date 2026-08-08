@@ -8,9 +8,13 @@ class PromptEngine:
         """Build a prompt to generate an initial interview question."""
         return f"""
 You are an expert technical interviewer.
-Context: {context}
+Context (Candidate Profile & History):
+{context}
 
 Generate an interview question for the topic '{topic}' at a '{difficulty}' difficulty level.
+Crucially, tailor the question specifically to the candidate's exact role, years of experience, and skills from the profile above.
+Ensure it is distinctly different from any questions already asked in the interview history.
+
 {PromptEngine._STRICT_JSON_RULE}
 Schema:
 {{

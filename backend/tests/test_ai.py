@@ -54,9 +54,11 @@ def sample_session():
 
 
 def test_prompt_engine():
-    prompt = PromptEngine.build_interview_prompt("ctx", "topic_x", "HARD")
+    prompt = PromptEngine.build_interview_prompt("ctx_candidate", "topic_x", "HARD")
     assert "topic_x" in prompt
     assert "HARD" in prompt
+    assert "ctx_candidate" in prompt
+    assert "specifically to the candidate's exact role" in prompt
     assert "ONLY a single valid JSON object" in prompt
 
 
@@ -107,3 +109,47 @@ def test_mock_provider_unique():
     q1 = provider.generate_question("p")
     q2 = provider.generate_question("Candidate Answer: p")
     assert q1 != q2
+
+def test_deduplication_logic(sample_candidate, sample_curriculum, sample_session):
+    from backend.services.ai.ai_service import AIService
+    from backend.services.ai.engine import AIEngine
+    from backend.models.interview import AskedQuestion, PlannedQuestion, QuestionCategory, QuestionDifficulty
+    
+    mock_engine = AIEngine(test_mode=True)
+    service = AIService(mock_engine)
+    
+    # Pre-populate session with a question
+    planned = PlannedQuestion(
+        category=QuestionCategory.TECHNICAL,
+        curriculum_day=1,
+        difficulty=QuestionDifficulty.MEDIUM,
+    )
+    sample_session.questions_asked.append(
+        AskedQuestion(question_text="What is Python?", planned_question=planned)
+    )
+    
+    # Mock _generate_with_retry to return a duplicate first, then a unique one
+    responses = ["What is Python?", "What are decorators in Python?"]
+    
+    def mock_generate(*args, **kwargs):
+        return responses.pop(0)
+        
+    with patch.object(service, '_generate_with_retry', side_effect=mock_generate):
+        q_text = service.generate_initial_question(sample_session, sample_candidate, sample_curriculum, planned)
+        assert q_text == "What are decorators in Python?"
+        
+    # Verify similarity check catches punctuation/case differences
+    sample_session.questions_asked.clear()
+    sample_session.questions_asked.append(
+        AskedQuestion(question_text="How does the Event Loop work in Node.js and why is it important for asynchronous programming?", planned_question=planned)
+    )
+    responses_sim = [
+        "How does the event loop work in node js, and why is it important for asynchronous programming?", 
+        "Explain promises in JS"
+    ]
+    def mock_generate_sim(*args, **kwargs):
+        return responses_sim.pop(0)
+        
+    with patch.object(service, '_generate_with_retry', side_effect=mock_generate_sim):
+        q_text = service.generate_initial_question(sample_session, sample_candidate, sample_curriculum, planned)
+        assert q_text == "Explain promises in JS"

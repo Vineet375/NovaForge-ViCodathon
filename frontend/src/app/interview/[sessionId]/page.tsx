@@ -171,7 +171,7 @@ export default function InterviewPage() {
           /* Final Report State */
           <Section className="py-0 md:py-0 lg:py-0">
             <InterviewReport 
-              feedback={report?.feedback || "Loading comprehensive feedback..."} 
+              feedback={report || "Loading comprehensive feedback..."} 
               onClose={() => router.push("/")} 
             />
           </Section>

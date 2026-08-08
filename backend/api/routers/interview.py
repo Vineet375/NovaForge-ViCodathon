@@ -210,23 +210,30 @@ def get_next_question(
             detail=f"Session is {session.status}, cannot trigger next generation manually",
         )
         
-    if len(session.questions_asked) >= MAX_INTERVIEW_QUESTIONS:
-        raise HTTPException(status_code=409, detail="Maximum questions reached")
-
     _check_rate_limit(session)
     _check_concurrency(session)
 
-    session.status = InterviewState.GENERATING
     session.ai_request_in_progress = True
     session.last_error = None
-    background_tasks.add_task(
-        _generate_question_task,
-        session_id,
-        session_manager,
-        ai_service,
-        candidate_repo,
-        curriculum_repo
-    )
+
+    if len(session.questions_asked) >= MAX_INTERVIEW_QUESTIONS:
+        session.status = InterviewState.FINAL_EVALUATION
+        background_tasks.add_task(
+            _generate_final_evaluation_task,
+            session_id,
+            session_manager,
+            ai_service
+        )
+    else:
+        session.status = InterviewState.GENERATING
+        background_tasks.add_task(
+            _generate_question_task,
+            session_id,
+            session_manager,
+            ai_service,
+            candidate_repo,
+            curriculum_repo
+        )
 
     return {"status": "generating"}
 

@@ -104,9 +104,19 @@ def test_full_interview_flow():
     # Try answering when completed (Idempotency should return 200)
     bad_ans = client.post(f"/interview/{session_id}/answer", json={"answer_text": "test"})
     assert bad_ans.status_code == 200
+    
+    # Verify final report
     feedback = client.get(f"/interview/{session_id}/feedback")
     assert feedback.status_code == 200
-    assert "overall_score" in feedback.json()
+    fb_data = feedback.json()
+    assert "overall_score" in fb_data
+    assert "strengths" in fb_data
+    assert "weaknesses" in fb_data
+    
+    # Verify GET session persistence
+    state_resp2 = client.get(f"/interview/{session_id}")
+    assert state_resp2.status_code == 200
+    assert state_resp2.json()["status"] == "completed"
 
 def test_invalid_transitions():
     candidates = client.get("/candidates").json()
@@ -119,3 +129,36 @@ def test_invalid_transitions():
     # Try to fetch next manually when it's already generated (409)
     bad_next = client.post(f"/interview/{session_id}/next")
     assert bad_next.status_code == 409
+
+def test_final_evaluation_recovery():
+    candidates = client.get("/candidates").json()
+    candidate_id = candidates[1]["member"]["id"]
+    
+    req = {"candidate_id": candidate_id}
+    start_resp = client.post("/interview/start", json=req)
+    session_id = start_resp.json()["session_id"]
+    
+    # Answer 3 questions
+    for i in range(3):
+        ans_resp = client.post(f"/interview/{session_id}/answer", json={"answer_text": "test"})
+        assert ans_resp.status_code == 200
+        
+    # Mock AIEngine to fail on final evaluation
+    with patch("backend.services.ai.ai_service.AIService.generate_feedback", side_effect=Exception("Timeout")):
+        ans_resp = client.post(f"/interview/{session_id}/answer", json={"answer_text": "test"})
+        assert ans_resp.status_code == 200
+        
+    state_resp = client.get(f"/interview/{session_id}")
+    assert state_resp.json()["status"] == "waiting_for_ai"
+    
+    # Trigger /next to recover final evaluation
+    next_resp = client.post(f"/interview/{session_id}/next")
+    assert next_resp.status_code == 200
+    
+    # Now it should be completed
+    state_resp = client.get(f"/interview/{session_id}")
+    assert state_resp.json()["status"] == "completed"
+    
+    fb = client.get(f"/interview/{session_id}/feedback")
+    assert fb.status_code == 200
+    assert "overall_score" in fb.json()

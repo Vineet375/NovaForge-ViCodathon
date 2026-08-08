@@ -1157,3 +1157,15 @@ URGENT LOCAL RUNTIME BUG FIX
 **Context**: The application required a 45 second fallback delay before hitting MockProvider when external APIs timed out, providing a poor demonstration UX.
 **Reasoning**: Changing the timeouts and error catch blocks ensures that failure paths cascade immediately, bounding total latency to ~15-20 seconds max.
 **AI Output Summary**: Bounded Gemini wait times to SDK-minimum 10s, Bounded Nvidia to 5s. Removed excessive retries on network timeouts. Updated documentation and ran end-to-end local test verifications to confirm sub-20s completion.
+
+## Prompt: Deduplication, Personalization, and Final Report Fixes
+**Timestamp**: 2026-08-08
+**Milestone**: 18.6
+**Objective**: Fix duplicate question generation, ensure candidate profile personalization, and repair the final report rendering issue.
+**Context**: During manual testing, the AI generated duplicate questions. Also, questions were not personalized enough. Finally, the final report showed N/A even when the interview reached 100% completion.
+**Reasoning**: 
+- Added a difflib similarity check within the generate_initial_question retry loop.
+- Heavily emphasized the candidate profile in PromptEngine.build_interview_prompt.
+- Updated the frontend page.tsx to pass the correct report object structure.
+- Updated /next to retry the final evaluation if it fails.
+**AI Output Summary**: Implemented deduplication and personalized prompts. Fixed the frontend report prop mapping. Added tests for all paths.

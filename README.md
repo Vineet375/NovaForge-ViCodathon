@@ -590,6 +590,11 @@ MIT License — see [LICENSE](LICENSE) for details.
 - **Improved Failover Logic**: Reduced maximum external API failover wait time from ~45 seconds to a maximum of ~20 seconds total before hitting `MockProvider`.
 - **429 Handling**: Rate limits instantly trigger failovers instead of waiting for retries, providing <3s failover times for quota exhaustion scenarios.
 
+## Milestone 18.6: Final Targeted Bug-Fix
+- **Duplicate Question Prevention**: Implemented a lightweight similarity checker (`difflib`) to prevent the LLM from generating repetitive questions across the interview session.
+- **Candidate Personalization**: Question generation prompts strictly enforce tailoring questions to the candidate's exact role, skills, and experience.
+- **Robust Final Reports**: Resolved an issue with the frontend report rendering and added a recovery mechanism (`/next`) if the final evaluation background task fails due to external API timeouts.
+
 
 ## Backend Dependencies
 - Ensure `openai>=1.0.0` is installed via `requirements.txt` for the NVIDIA provider to function.
