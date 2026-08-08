@@ -43,21 +43,36 @@ const SidebarContent = React.forwardRef<
 SidebarContent.displayName = "SidebarContent"
 
 const SidebarItem = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }
->(({ className, active, ...props }, ref) => (
-  <button
-    ref={ref}
-    className={cn(
-      "flex w-full items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      active 
-        ? "bg-primary text-primary-foreground shadow-premium-sm" 
-        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-      className
-    )}
-    {...props}
-  />
-))
+  HTMLAnchorElement | HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & React.AnchorHTMLAttributes<HTMLAnchorElement> & { active?: boolean; href?: string }
+>(({ className, active, href, ...props }, ref) => {
+  const commonClasses = cn(
+    "flex w-full items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+    active 
+      ? "bg-primary text-primary-foreground shadow-premium-sm" 
+      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+    className
+  )
+
+  if (href) {
+    return (
+      <a
+        ref={ref as React.Ref<HTMLAnchorElement>}
+        href={href}
+        className={commonClasses}
+        {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+      />
+    )
+  }
+
+  return (
+    <button
+      ref={ref as React.Ref<HTMLButtonElement>}
+      className={commonClasses}
+      {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}
+    />
+  )
+})
 SidebarItem.displayName = "SidebarItem"
 
 export {
