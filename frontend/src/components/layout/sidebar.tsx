@@ -42,6 +42,8 @@ const SidebarContent = React.forwardRef<
 ))
 SidebarContent.displayName = "SidebarContent"
 
+import Link from "next/link"
+
 const SidebarItem = React.forwardRef<
   HTMLAnchorElement | HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement> & React.AnchorHTMLAttributes<HTMLAnchorElement> & { active?: boolean; href?: string }
@@ -56,11 +58,10 @@ const SidebarItem = React.forwardRef<
 
   if (href) {
     return (
-      <a
-        ref={ref as React.Ref<HTMLAnchorElement>}
+      <Link
         href={href}
         className={commonClasses}
-        {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+        {...(props as any)}
       />
     )
   }
