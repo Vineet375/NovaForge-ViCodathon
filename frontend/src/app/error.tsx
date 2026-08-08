@@ -1,6 +1,5 @@
 "use client" // Error components must be Client Components
 
-import { useEffect } from 'react'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { PageContainer } from '@/components/layout/layout-foundation'
 import { Button } from '@/components/ui/button'
@@ -17,10 +16,6 @@ export default function Error({
 }) {
   const router = useRouter()
   
-  useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error)
-  }, [error])
 
   return (
     <DashboardLayout>

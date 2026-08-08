@@ -38,16 +38,6 @@ export default function InterviewPage() {
     if (session?.status === "in_progress" && !currentQuestion && session.questions_asked.length === 0) {
       nextQuestion()
     }
-    // If a question was already asked but not answered, set it
-    if (session?.status === "in_progress" && !currentQuestion && session.questions_asked.length > 0) {
-      const lastQ = session.questions_asked[session.questions_asked.length - 1]
-      if (!lastQ.answer_given) {
-        // We'd need a way to get the text of the current question, but it's in the session state
-        // The hook state manages it, but let's just trigger nextQuestion if there's an issue
-        // Actually, the hook should initialize currentQuestion if it fetches session. 
-        // For now, let's just show it.
-      }
-    }
   }, [session, currentQuestion, nextQuestion])
 
   const handleSubmit = async () => {

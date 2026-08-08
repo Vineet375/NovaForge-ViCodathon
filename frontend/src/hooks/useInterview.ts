@@ -79,7 +79,6 @@ export function useInterviewSession(sessionId: string) {
   }, [sessionId, router])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSession()
   }, [fetchSession])
 
