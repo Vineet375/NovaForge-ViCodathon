@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Target, Brain, Download, ChevronRight, CheckCircle2 } from "lucide-react"
+import { Target, Brain, Download, ChevronRight, CheckCircle2, Copy, Printer } from "lucide-react"
+import { toast } from "sonner"
 
 interface InterviewReportProps {
   feedback: any
@@ -25,6 +26,26 @@ export function InterviewReport({ feedback, onClose }: InterviewReportProps) {
   const weaknesses = isObject && Array.isArray(feedback.weaknesses) && feedback.weaknesses.length > 0 
     ? feedback.weaknesses 
     : ["No specific growth areas identified."]
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(summary)
+    toast.success("Summary copied to clipboard")
+  }
+
+  const handlePrint = () => {
+    window.print()
+  }
+
+  const handleDownloadJSON = () => {
+    const blob = new Blob([JSON.stringify(feedback, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "novaforge_interview_report.json"
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success("Report downloaded successfully")
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
@@ -97,12 +118,22 @@ export function InterviewReport({ feedback, onClose }: InterviewReportProps) {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="bg-muted/30 border-t border-border mt-auto p-4 flex justify-between items-center">
-              <Button variant="outline" size="sm" className="bg-background">
-                <Download className="mr-2 h-4 w-4" />
-                Download PDF
-              </Button>
-              <Button onClick={onClose} className="shadow-premium-sm">
+            <CardFooter className="bg-muted/30 border-t border-border mt-auto p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="bg-background shadow-sm" onClick={handleDownloadJSON}>
+                  <Download className="mr-2 h-4 w-4" />
+                  JSON
+                </Button>
+                <Button variant="outline" size="sm" className="bg-background shadow-sm hidden sm:flex" onClick={handlePrint}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+                <Button variant="outline" size="sm" className="bg-background shadow-sm" onClick={handleCopy}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
+                </Button>
+              </div>
+              <Button onClick={onClose} className="shadow-premium-sm w-full sm:w-auto transition-all duration-300">
                 Return to Dashboard
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
