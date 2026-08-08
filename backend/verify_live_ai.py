@@ -30,10 +30,24 @@ def verify_gemini_rotation():
     provider = GeminiProvider()
     print(f"Loaded {len(provider.api_keys)} Gemini keys.")
     if len(provider.api_keys) > 0:
-        success, res, latency = measure_latency(provider.generate_question, "Give me a one sentence React question.")
-        print(f"Gemini Success: {success}, Latency: {latency:.2f}s")
-        if not success:
-            print(f"Sanitized Error: {res}")
+        original_keys = list(provider.api_keys)
+        for idx, key in enumerate(original_keys):
+            print(f"Testing Gemini Key {idx + 1}...")
+            provider.api_keys = [key]
+            success, res, latency = measure_latency(provider.generate_question, "Give me a one sentence React question.")
+            if not success and "timeout" in str(res).lower():
+                print(f"Gemini Key {idx + 1} Success: False, Latency: {latency:.2f}s, Status: TIMEOUT")
+            elif not success and ("invalid" in str(res).lower() or "400" in str(res).lower()):
+                print(f"Gemini Key {idx + 1} Success: False, Latency: {latency:.2f}s, Status: AUTH_FAILURE")
+            elif not success and ("rate limit" in str(res).lower() or "busy" in str(res).lower() or "exhausted" in str(res).lower()):
+                print(f"Gemini Key {idx + 1} Success: False, Latency: {latency:.2f}s, Status: RATE_LIMIT")
+            elif not success and "not found" in str(res).lower():
+                print(f"Gemini Key {idx + 1} Success: False, Latency: {latency:.2f}s, Status: MODEL_NOT_FOUND")
+            else:
+                print(f"Gemini Key {idx + 1} Success: {success}, Latency: {latency:.2f}s")
+                if not success:
+                    print(f"Sanitized Error: {res}")
+        provider.api_keys = original_keys
     else:
         print("No Gemini keys configured.")
 
