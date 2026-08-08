@@ -3,6 +3,7 @@ import { PageContainer, Section, SectionHeader, SectionTitle, SectionDescription
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Play, TrendingUp, Target, Clock, Zap } from "lucide-react"
+import { CandidateSelector } from "@/components/dashboard/candidate-selector"
 
 export default function Home() {
   return (
@@ -75,6 +76,21 @@ export default function Home() {
                 </p>
               </CardContent>
             </Card>
+          </div>
+        </Section>
+
+        <Section className="py-0 md:py-0 lg:py-0">
+          <div className="grid gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-8">
+              {/* Future Interview Overview and Curriculum Progress will go here */}
+            </div>
+            
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-lg font-medium mb-4">Select Candidate</h3>
+                <CandidateSelector />
+              </div>
+            </div>
           </div>
         </Section>
       </PageContainer>
