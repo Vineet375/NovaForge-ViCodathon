@@ -89,19 +89,19 @@ export default function Home() {
                         </p>
                       </div>
                       <Badge variant={session.status === 'waiting_for_ai' ? 'destructive' : 'secondary'} className="capitalize text-xs">
-                        {session.status.replace('_', ' ')}
+                        {session.status.replaceAll('_', ' ')}
                       </Badge>
                     </div>
                     
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs text-muted-foreground font-medium">
                         <span>Question {session.current_question_number} of 8</span>
-                        <span>{Math.round(((session.current_question_number - 1) / 8) * 100)}%</span>
+                        <span>{Math.max(0, Math.round(((session.current_question_number - 1) / 8) * 100))}%</span>
                       </div>
                       <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-primary transition-all duration-500" 
-                          style={{ width: `${((session.current_question_number - 1) / 8) * 100}%` }}
+                          style={{ width: `${Math.max(0, ((session.current_question_number - 1) / 8) * 100)}%` }}
                         />
                       </div>
                     </div>

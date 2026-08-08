@@ -1,5 +1,5 @@
 "use client"
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { InterviewAPI, InterviewSessionState, ApiError, FeedbackResponse } from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -42,7 +42,42 @@ export function useInterviewSession(sessionId: string) {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [retryAfter, setRetryAfter] = useState<number | null>(null)
+  
   const router = useRouter()
+  
+  // Guard against duplicate concurrent requests
+  const requestInProgress = useRef(false)
+  // Track mount status for safe state updates after async calls
+  const isMounted = useRef(true)
+
+  useEffect(() => {
+    isMounted.current = true
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  const handleApiError = useCallback((err: unknown, defaultMessage: string) => {
+    if (err instanceof ApiError) {
+      if (err.status === 409) {
+        // Safe to ignore duplicate request errors
+        return
+      }
+      if (err.status === 429 && err.headers) {
+        const retryHeader = err.headers.get("Retry-After")
+        if (retryHeader) {
+          setRetryAfter(parseInt(retryHeader, 10))
+          return // Prevent triggering hard error UI
+        }
+      }
+      if (isMounted.current) setError(err.message)
+      toast.error(err.message)
+    } else {
+      if (isMounted.current) setError(defaultMessage)
+      toast.error(defaultMessage)
+    }
+  }, [])
 
   const fetchSession = useCallback(async () => {
     if (!sessionId) return
@@ -50,12 +85,24 @@ export function useInterviewSession(sessionId: string) {
       setLoading(true)
       setError(null)
       const res = await InterviewAPI.getSession(sessionId)
+      if (!isMounted.current) return
       setSession(res)
+      
+      // Auto-restore current question if available
+      if (res.questions_asked && res.questions_asked.length > 0) {
+        const lastQ = res.questions_asked[res.questions_asked.length - 1]
+        if (!lastQ.answer_given) {
+          setCurrentQuestion(lastQ.question_text)
+        } else if (res.status !== "completed") {
+            // Need next question
+            setCurrentQuestion(null)
+        }
+      }
       
       if (res.status === "completed") {
         try {
           const fb = await InterviewAPI.getFeedback(sessionId)
-          setFeedback(fb)
+          if (isMounted.current) setFeedback(fb)
         } catch {
           // ignore feedback error temporarily
         }
@@ -64,56 +111,54 @@ export function useInterviewSession(sessionId: string) {
       if (err instanceof ApiError) {
         if (err.message.includes("404") || err.message.toLowerCase().includes("not found")) {
             localStorage.removeItem("active_session_id")
-            router.push("/")
+            if (isMounted.current) router.push("/")
             toast.error("Session expired or not found")
             return
         }
-        setError(err.message)
-      } else {
-        setError("Failed to fetch session")
       }
-      toast.error("Failed to load interview session")
+      handleApiError(err, "Failed to load interview session")
     } finally {
-      setLoading(false)
+      if (isMounted.current) setLoading(false)
     }
-  }, [sessionId, router])
+  }, [sessionId, router, handleApiError])
 
   useEffect(() => {
     fetchSession()
   }, [fetchSession])
 
   const nextQuestion = useCallback(async () => {
-    if (!sessionId) return
+    if (!sessionId || requestInProgress.current) return
     try {
+      requestInProgress.current = true
       setActionLoading(true)
       setError(null)
+      setRetryAfter(null)
       const res = await InterviewAPI.getNextQuestion(sessionId)
+      if (!isMounted.current) return
       setCurrentQuestion(res.question_text)
       await fetchSession() // update session state
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message)
-        toast.error(`Failed to load question: ${err.message}`)
-      } else {
-        setError("Failed to get next question")
-        toast.error("Failed to load question")
-      }
+      if (!isMounted.current) return
+      handleApiError(err, "Failed to get next question")
     } finally {
-      setActionLoading(false)
+      requestInProgress.current = false
+      if (isMounted.current) setActionLoading(false)
     }
-  }, [sessionId, fetchSession])
+  }, [sessionId, fetchSession, handleApiError])
 
   const answerQuestion = useCallback(async (answer: string) => {
-    if (!sessionId) return
+    if (!sessionId || requestInProgress.current) return
     try {
+      requestInProgress.current = true
       setActionLoading(true)
       setError(null)
+      setRetryAfter(null)
       const res = await InterviewAPI.answerQuestion(sessionId, { answer_text: answer })
-      await fetchSession() // update session state
+      if (!isMounted.current) return
       
+      await fetchSession() // update session state
       toast.success("Answer submitted successfully")
       
-      // If there's a follow-up question, we set it as the current question
       if (res.follow_up_question) {
         setCurrentQuestion(res.follow_up_question)
       } else {
@@ -121,18 +166,14 @@ export function useInterviewSession(sessionId: string) {
       }
       return res
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message)
-        toast.error(`Failed to submit answer: ${err.message}`)
-      } else {
-        setError("Failed to submit answer")
-        toast.error("Failed to submit answer")
-      }
+      if (!isMounted.current) return
+      handleApiError(err, "Failed to submit answer")
       return null
     } finally {
-      setActionLoading(false)
+      requestInProgress.current = false
+      if (isMounted.current) setActionLoading(false)
     }
-  }, [sessionId, fetchSession])
+  }, [sessionId, fetchSession, handleApiError])
 
   return {
     session,
@@ -141,6 +182,8 @@ export function useInterviewSession(sessionId: string) {
     loading,
     actionLoading,
     error,
+    retryAfter,
+    setRetryAfter,
     fetchSession,
     nextQuestion,
     answerQuestion
