@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Play, TrendingUp, Target, Clock, Zap } from "lucide-react"
 import { CandidateSelector } from "@/components/dashboard/candidate-selector"
 import { CurriculumProgress } from "@/components/dashboard/curriculum-progress"
+import { ActivityTimeline } from "@/components/dashboard/activity-timeline"
 
 export default function Home() {
   return (
@@ -84,6 +85,7 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-8">
               <CurriculumProgress />
+              <ActivityTimeline />
             </div>
             
             <div className="space-y-8">
