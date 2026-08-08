@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, ArrowRight, CheckCircle2, MessageSquare, Play, AlertCircle } from "lucide-react"
+import { TypingIndicator } from "@/components/ui/typing-indicator"
+import { InterviewReport } from "@/components/interview/interview-report"
 
 export default function InterviewPage() {
   const params = useParams()
@@ -125,40 +127,10 @@ export default function InterviewPage() {
         {isCompleted ? (
           /* Final Report State */
           <Section className="py-0 md:py-0 lg:py-0">
-            <Card className="shadow-premium">
-              <CardHeader className="text-center pb-2">
-                <div className="mx-auto w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle2 className="h-6 w-6 text-green-500" />
-                </div>
-                <CardTitle className="text-2xl">Interview Completed</CardTitle>
-                <p className="text-muted-foreground mt-2">
-                  You have successfully completed this technical interview session.
-                </p>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="rounded-xl bg-muted/30 p-6 border border-border">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5 text-primary" />
-                    Final Evaluation
-                  </h3>
-                  {feedback ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <p className="whitespace-pre-wrap leading-relaxed">{feedback.summary || feedback}</p>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                      <span className="ml-3 text-sm text-muted-foreground">Generating comprehensive feedback...</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter className="justify-center pt-2 pb-8">
-                <Button onClick={() => router.push("/")} size="lg" className="shadow-premium-sm">
-                  Return to Dashboard
-                </Button>
-              </CardFooter>
-            </Card>
+            <InterviewReport 
+              feedback={feedback || "Generating comprehensive feedback..."} 
+              onClose={() => router.push("/")} 
+            />
           </Section>
         ) : (
           /* Interview Flow State */
@@ -232,7 +204,7 @@ export default function InterviewPage() {
               </Card>
 
               {/* Immediate Feedback Panel */}
-              {currentFeedback && (
+              {(currentFeedback || (actionLoading && answer.trim())) && (
                 <Card className="shadow-premium bg-muted/20 border-l-4 border-l-primary animate-in slide-in-from-bottom-4 fade-in duration-500">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -241,9 +213,16 @@ export default function InterviewPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                      {currentFeedback}
-                    </p>
+                    {!currentFeedback && actionLoading ? (
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <TypingIndicator />
+                        <span className="animate-pulse">Evaluating your response...</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                        {currentFeedback}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               )}
