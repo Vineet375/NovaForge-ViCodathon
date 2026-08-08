@@ -111,22 +111,17 @@ class GeminiProvider(BaseAIProvider):
             except TimeoutError as e:
                 logger.warning(
                     f"Gemini API timeout on key {key_idx + 1}: "
-                    f"{_sanitize_error(str(e), self.api_keys)}"
+                    f"{_sanitize_error(str(e), self.api_keys)}. Failing over immediately."
                 )
-                last_exception = LLMTimeoutException(
-                    "The AI service took too long to respond. Please try again."
-                )
-                continue
+                raise LLMTimeoutException("The AI service took too long to respond. Failing over.")
 
             except Exception as e:
                 logger.error(
                     f"Unexpected Gemini API error on key {key_idx + 1}: "
                     f"{_sanitize_error(str(e), self.api_keys)}"
                 )
-                last_exception = LLMFailureException(
-                    "The AI service is currently unavailable. Please try again."
-                )
-                continue
+                # If it's a 5xx error or other unexpected error, it's likely a provider outage, failover immediately
+                raise LLMFailureException("The AI service is currently unavailable. Failing over.")
 
         # If all keys failed
         if isinstance(last_exception, LLMRateLimitException):

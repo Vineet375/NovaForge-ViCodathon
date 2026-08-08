@@ -1150,3 +1150,10 @@ URGENT LOCAL RUNTIME BUG FIX
 5. Frontend must be a passive observer of backend state (polling `GENERATING` / `FINAL_EVALUATION`), never triggering AI generation directly.
 
 **Status**: Implemented securely. Evaluated with 18 unit tests guaranteeing state machine integrity and idempotency.
+## Prompt: AI Failover Latency Optimization
+**Timestamp**: 2026-08-08
+**Milestone**: 18.5 - Final AI Latency Optimization
+**Objective**: Minimize AI failover latency to MockProvider while preserving architecture and provider order.
+**Context**: The application required a 45 second fallback delay before hitting MockProvider when external APIs timed out, providing a poor demonstration UX.
+**Reasoning**: Changing the timeouts and error catch blocks ensures that failure paths cascade immediately, bounding total latency to ~15-20 seconds max.
+**AI Output Summary**: Bounded Gemini wait times to SDK-minimum 10s, Bounded Nvidia to 5s. Removed excessive retries on network timeouts. Updated documentation and ran end-to-end local test verifications to confirm sub-20s completion.

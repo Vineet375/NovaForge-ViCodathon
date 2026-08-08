@@ -45,7 +45,7 @@ class NvidiaProvider(BaseAIProvider):
                 client = OpenAI(
                     base_url="https://integrate.api.nvidia.com/v1",
                     api_key=api_key,
-                    timeout=httpx.Timeout(7.0, connect=3.0),
+                    timeout=httpx.Timeout(5.0, connect=2.0),
                     max_retries=0
                 )
                 
@@ -74,6 +74,12 @@ class NvidiaProvider(BaseAIProvider):
             except Exception as e:
                 sanitized_error = str(e).replace(api_key, "[REDACTED]") if api_key else str(e)
                 logger.warning(f"NVIDIA API Error with model {model}: {sanitized_error}")
+                
+                # If it's a timeout or server error, failover to MockProvider immediately
+                # instead of waiting for the second model to also timeout.
+                if "timeout" in str(e).lower() or "50" in str(e):
+                    raise LLMFailureException(f"NVIDIA NIM unavailable: {sanitized_error}")
+                    
                 last_exception = Exception(sanitized_error)
                 continue
                 

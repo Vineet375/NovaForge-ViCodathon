@@ -585,6 +585,11 @@ MIT License — see [LICENSE](LICENSE) for details.
 - **Failover Latency Optimization**: Added strict timeouts (\httpx.Timeout(7.0, connect=3.0)\ and \max_retries=0\) to the NVIDIA provider and 10s timeouts to Gemini, guaranteeing bounded failure responses (< 10s per layer).
 - **MockProvider Fallback Safety**: Mock fallback deterministically loops through a large pool of unique questions, ensuring UI progression without duplicates during complete API outages.
 
+## Milestone 18.5: AI Failover Latency Optimization
+- **Bounded Timeouts**: Strict timeout bounds enforced for Gemini (10s) and NVIDIA (5s) providers.
+- **Improved Failover Logic**: Reduced maximum external API failover wait time from ~45 seconds to a maximum of ~20 seconds total before hitting `MockProvider`.
+- **429 Handling**: Rate limits instantly trigger failovers instead of waiting for retries, providing <3s failover times for quota exhaustion scenarios.
+
 
 ## Backend Dependencies
 - Ensure `openai>=1.0.0` is installed via `requirements.txt` for the NVIDIA provider to function.
