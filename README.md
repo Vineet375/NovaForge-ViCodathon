@@ -1,146 +1,574 @@
 # NovaForge AI Interview Agent
-ViCodathon 2026 – India's AI-First 48 Hour Vibe Coding Hackathon! 
 
-An AI Interview Agent that conducts personalized technical interviews based on a candidate's learning journey.
+> **ViCodathon 2026** — India's AI-First 48-Hour Vibe Coding Hackathon
 
-## Hackathon
-AB Talks ViCodathon 2026
-**Team**: NovaForge
-
-## Tech Stack
-- **Frontend**: Next.js, React, TypeScript, Tailwind CSS (v4), shadcn/ui
-- **Backend**: Python, FastAPI, Pydantic
-- **AI**: Google Generative AI (Gemini)
+A production-grade AI-powered technical interview system that conducts personalized, context-aware interviews based on a candidate's learning journey through the curriculum.
 
 ---
 
-## Frontend Architecture & Design System (Milestone 8)
+## Table of Contents
 
-The frontend for NovaForge follows a strict, highly reusable design philosophy inspired by modern SaaS products (e.g., Vercel, Linear, Stripe). The design communicates a premium, AI-first, fast, and accessible enterprise experience.
+1. [Project Overview](#project-overview)
+2. [Problem Statement](#problem-statement)
+3. [Features](#features)
+4. [Architecture Overview](#architecture-overview)
+5. [Technology Stack](#technology-stack)
+6. [Folder Structure](#folder-structure)
+7. [AI Workflow](#ai-workflow)
+8. [Backend Architecture](#backend-architecture)
+9. [Frontend Architecture](#frontend-architecture)
+10. [API Reference](#api-reference)
+11. [Environment Variables](#environment-variables)
+12. [Installation](#installation)
+    - [Prerequisites](#prerequisites)
+    - [1. Clone the Repository](#1-clone-the-repository)
+    - [2. Backend Setup](#2-backend-setup)
+    - [3. Frontend Setup](#3-frontend-setup)
+13. [Running the Application](#running-the-application)
+    - [Run Backend](#run-backend)
+    - [Run Frontend](#run-frontend)
+14. [Running Tests](#running-tests)
+15. [Gemini API Configuration](#gemini-api-configuration)
+16. [Common Troubleshooting](#common-troubleshooting)
+17. [Deployment Notes](#deployment-notes)
+18. [Known Limitations](#known-limitations)
+19. [Future Improvements](#future-improvements)
+20. [Authors](#authors)
+21. [License](#license)
 
-### Design Tokens
-Our core design tokens are centralized in `frontend/src/app/globals.css`, leveraging Tailwind CSS v4's native CSS variable support:
-- **Typography Scale**: Built natively using the `Geist` and `Geist Mono` font families for maximum legibility and modern aesthetics.
-- **Color Palette**: A curated semantic color scale featuring deep indigo/navy as the primary brand color, combined with monochromatic grays for structure, allowing content to breathe.
-- **Shadows & Elevation**: Custom `--shadow-premium` variables provide a subtle depth layered look for cards, dropdowns, and interactive elements.
-- **Theme Support**: Seamless native dark mode integration with full persistence using `next-themes`. Variables gracefully switch from a clean white light theme to a deep, OLED-friendly dark theme.
+---
 
-### Reusable UI Foundations
-Instead of building monolithic pages, the frontend is assembled using tightly-scoped, reusable components located in `frontend/src/components`:
-- **Layout System (`layout-foundation.tsx`)**: Exposes wrappers like `PageContainer`, `Section`, `SectionHeader`, and `SectionTitle` that instantly align margins, paddings, and widths identically across all future pages.
-- **Navigation (`navbar.tsx`, `sidebar.tsx`)**: Reusable shells for top and side navigation that integrate seamlessly with the Layout foundation.
-- **Cards (`card.tsx`)**: Premium bounding boxes with integrated hover animations and shadow drops.
-- **Buttons (`button.tsx`)**: Extends primitive buttons to include a `LoadingButton` variant with integrated spinners and disabled states.
-- **Skeletons (`skeleton.tsx`)**: Reusable loading placeholder blocks (`CardSkeleton`, `PageHeaderSkeleton`) to prevent layout shifts during asynchronous state transitions.
-- **Theme Toggle (`theme-toggle.tsx`)**: Accessible toggle that triggers rapid UI recoloring with subtle icon animations.
+## Project Overview
 
-All components adhere strictly to accessibility standards (ARIA roles, robust focus rings, high contrast text).
+**NovaForge** is an AI interview agent built for the ViCodathon 2026 hackathon. It analyzes a candidate's curriculum progress, learning signals (missions completed, commit days, first-try success rate), and experience profile to dynamically generate personalized technical questions at the appropriate difficulty level.
+
+Unlike generic interview tools, NovaForge understands *what the candidate has studied* and tailors every question to their specific curriculum journey — from RAG pipelines and vector databases to full-stack React/FastAPI application development.
+
+---
+
+## Problem Statement
+
+Traditional technical screenings are generic. They don't account for:
+
+- **What the candidate has actually learned** during their training program
+- **Their demonstrated performance** (missions passed, skipped, retried)
+- **The difficulty level appropriate** for their seniority and track record
+
+NovaForge solves this by building a complete learning profile for each candidate and using it as the primary context for all AI-generated questions, evaluations, and final feedback.
+
+---
+
+## Features
+
+| Feature | Description |
+|---|---|
+| 🤖 **AI-Powered Questions** | Gemini generates curriculum-specific questions at the right difficulty |
+| 📊 **Adaptive Difficulty** | Difficulty calculated from experience, mission success rate, and consistency |
+| 🔄 **Dynamic Follow-ups** | LLM generates follow-up questions when answers need more depth |
+| 📋 **Full Interview Report** | Comprehensive final report with scores, strengths, weaknesses, and a learning path |
+| ↩️ **Resume Interview** | Sessions persist in localStorage so interviews can be resumed after page reload |
+| 🌙 **Dark/Light Mode** | Full theme support with system preference detection |
+| 📱 **Responsive Design** | Works on desktop and tablet viewports |
+| 🔒 **Secure Configuration** | API keys never committed; never logged; never exposed in error responses |
+
+---
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────┐
+│                   FRONTEND                  │
+│  Next.js 15 + React + TypeScript            │
+│  ┌──────────┐  ┌────────┐  ┌─────────────┐ │
+│  │Dashboard │  │ Cands  │  │ Interview   │ │
+│  │          │  │        │  │ [sessionId] │ │
+│  └──────────┘  └────────┘  └─────────────┘ │
+└───────────────────┬─────────────────────────┘
+                    │ REST (JSON)
+                    │ http://localhost:8000
+┌───────────────────▼─────────────────────────┐
+│                   BACKEND                   │
+│  FastAPI + Python 3.13                      │
+│  ┌──────────┐  ┌───────────┐               │
+│  │  Router  │  │ SessionMgr│               │
+│  └────┬─────┘  └───────────┘               │
+│       │                                     │
+│  ┌────▼──────────────────────────────────┐ │
+│  │            AI Pipeline                │ │
+│  │  AIService → PromptEngine             │ │
+│  │  ContextBuilder → GeminiAdapter       │ │
+│  │  ResponseParser                       │ │
+│  └───────────────────┬───────────────────┘ │
+└───────────────────────┼─────────────────────┘
+                        │ google-genai SDK
+┌───────────────────────▼─────────────────────┐
+│         Google Gemini API                   │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+## Technology Stack
+
+### Frontend
+| Technology | Version | Purpose |
+|---|---|---|
+| Next.js | 15 | React framework with App Router |
+| React | 19 | UI library |
+| TypeScript | 5 | Type safety |
+| Tailwind CSS | v4 | Utility-first styling |
+| shadcn/ui | latest | Accessible component library |
+| Sonner | latest | Toast notifications |
+| Lucide React | latest | Icon library |
+| next-themes | latest | Dark/light mode |
+
+### Backend
+| Technology | Version | Purpose |
+|---|---|---|
+| Python | 3.13+ | Runtime |
+| FastAPI | 0.103+ | REST API framework |
+| Pydantic | v2 | Data validation and serialization |
+| Uvicorn | 0.23+ | ASGI server |
+| google-genai | 0.1+ | Official Google Gen AI SDK |
+| python-dotenv | 1.0+ | Environment variable loading |
+
+---
+
+## Folder Structure
+
+```
+NovaForge - ViCodathon/
+├── .env.example              # Environment variable template
+├── .gitignore
+├── pytest.ini                # Backend test configuration
+├── requirements.txt          # Python dependencies
+├── README.md
+├── PROMPTS.md                # Full milestone engineering journal
+│
+├── backend/
+│   ├── main.py               # FastAPI app factory and middleware
+│   ├── api/
+│   │   ├── dependencies.py   # FastAPI dependency injection singletons
+│   │   ├── schemas.py        # Request/response Pydantic schemas
+│   │   └── routers/
+│   │       ├── health.py
+│   │       ├── candidate.py
+│   │       ├── curriculum.py
+│   │       ├── interview.py
+│   │       └── dashboard.py
+│   ├── models/               # Domain model definitions (Pydantic)
+│   │   ├── candidate.py
+│   │   ├── curriculum.py
+│   │   └── interview.py
+│   ├── services/
+│   │   ├── ai/               # AI pipeline
+│   │   │   ├── ai_service.py       # Facade – coordinates the pipeline
+│   │   │   ├── prompt_engine.py    # Prompt templates
+│   │   │   ├── context_builder.py  # Context assembly from domain models
+│   │   │   ├── gemini_adapter.py   # google-genai SDK wrapper
+│   │   │   ├── response_parser.py  # JSON extraction and validation
+│   │   │   ├── llm_provider.py     # Abstract LLM interface
+│   │   │   └── exceptions.py       # AI-specific exception hierarchy
+│   │   ├── domain/
+│   │   │   ├── session_manager.py  # Interview session state machine
+│   │   │   ├── strategies.py       # Difficulty + topic selection strategies
+│   │   │   └── evaluation_interface.py
+│   │   ├── repositories.py   # Data access (JSON files)
+│   │   └── data_loaders.py
+│   ├── data/                 # Static JSON data files
+│   │   ├── candidates.json
+│   │   └── curriculum.json
+│   ├── tests/
+│   │   ├── test_ai.py        # AI pipeline unit tests
+│   │   ├── test_api.py       # API integration tests (mocked LLM)
+│   │   └── test_domain.py    # Domain logic unit tests
+│   └── utils/
+│       ├── logger.py
+│       └── constants.py
+│
+└── frontend/
+    ├── package.json
+    ├── next.config.ts
+    └── src/
+        ├── app/
+        │   ├── layout.tsx
+        │   ├── page.tsx              # Dashboard (home)
+        │   ├── globals.css
+        │   ├── error.tsx             # Global error boundary
+        │   ├── not-found.tsx
+        │   ├── candidates/           # Candidate listing page
+        │   ├── curriculum/           # Curriculum progress page
+        │   ├── interview/
+        │   │   └── [sessionId]/      # Active interview session page
+        │   └── settings/
+        ├── components/
+        │   ├── ui/                   # Primitive components
+        │   ├── layout/               # Layout shells
+        │   ├── dashboard/            # Dashboard-specific components
+        │   └── interview/            # Interview-specific components
+        ├── hooks/
+        │   ├── useInterview.ts       # Interview session state management
+        │   ├── useCandidates.ts
+        │   ├── useCurriculum.ts
+        │   └── useDashboard.ts
+        └── lib/
+            └── api/                  # Typed API client layer
+```
+
+---
+
+## AI Workflow
+
+The following pipeline executes on every LLM interaction:
+
+```
+Router endpoint
+    │
+    ▼
+AIService (facade)
+    │
+    ├── ContextBuilder.build_full_context()
+    │       Assembles: candidate profile + curriculum topic +
+    │       interview plan + full Q&A history transcript
+    │
+    ├── PromptEngine.build_*_prompt()
+    │       Injects context into role-specific prompt template
+    │       Instructs the LLM: "Return ONLY valid JSON. No markdown."
+    │
+    ├── GeminiAdapter._call_gemini()
+    │       Calls google-genai SDK with:
+    │         response_mime_type="application/json"
+    │         max_output_tokens=2048
+    │       Retries on 429 (rate limit) up to 3×
+    │       Raises domain exceptions on 401/404/timeout
+    │
+    └── ResponseParser.parse_*()
+            Strips markdown fences if present
+            Parses JSON
+            Validates required keys
+            Raises InvalidResponseException on malformed output
+```
 
 ---
 
 ## Backend Architecture
 
-The backend is strictly decoupled into layers:
-- **API (`backend/api/`)**: FastAPI routing layer exposing REST resources.
-- **Domain (`backend/services/domain/`)**: Pure state machine driving logic without external AI dependency (`SessionManager`).
-- **AI Layer (`backend/services/ai/`)**: Specialized handlers (`PromptEngine`, `ContextBuilder`, `ResponseParser`, `GeminiAdapter`) that safely constrain unpredictable LLM outputs into structured JSON.
+The backend is built on a strict layered architecture. Each layer has one responsibility and depends only on layers below it.
+
+```
+Router (HTTP boundary)
+  └── FastAPI Dependency Injection (dependencies.py)
+        └── AIService (facade – no HTTP knowledge)
+              ├── ContextBuilder   (pure functions, no I/O)
+              ├── PromptEngine     (pure functions, no I/O)
+              ├── GeminiAdapter    (I/O boundary – Gemini API)
+              └── ResponseParser   (pure functions, no I/O)
+```
+
+**Session Management** (`SessionManager`) runs as an in-memory singleton. Sessions survive for the lifetime of the server process. Each session tracks:
+- The candidate ID
+- The list of questions asked (with answers, scores, and feedback)
+- The current difficulty level and curriculum day
+- Session status: `NOT_STARTED → IN_PROGRESS → COMPLETED`
+
+**Error Handling** uses a typed exception hierarchy (`AIEngineException` and subclasses). A global FastAPI exception handler (`@app.exception_handler(AIEngineException)`) converts all AI exceptions to clean `500` JSON responses. No stack traces ever reach the client.
 
 ---
 
-## Environment Setup
+## Frontend Architecture
+
+The frontend follows a strict, component-driven design philosophy:
+
+- **API Layer** (`src/lib/api/`): All backend communication is centralized here with typed interfaces per domain (`interview.ts`, `candidate.ts`, `curriculum.ts`, `dashboard.ts`).
+- **Custom Hooks** (`src/hooks/`): React hooks wrap the API layer and manage loading, error, and data state. Components only consume hooks — never call `fetch` directly.
+- **Components** (`src/components/`): Organized into `ui/` (primitives), `layout/` (shells), `dashboard/`, and `interview/`.
+- **Design System**: Centralized in `globals.css` using CSS custom properties for colors, shadows, and typography. Tailwind CSS v4 native CSS variable support.
+
+**Resume Interview**: On session start, `session_id` is written to `localStorage`. The Dashboard reads it on mount and enables a "Resume Interview" button. If the server no longer knows about the session (e.g., after a restart), the hook catches the `404`, clears localStorage, and redirects gracefully to the Dashboard.
+
+---
+
+## API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Health check |
+| `GET` | `/candidates` | List all candidate personas |
+| `GET` | `/candidates/{id}` | Get a specific candidate |
+| `GET` | `/curriculum` | Get the full curriculum |
+| `GET` | `/curriculum/day/{day}` | Get a specific curriculum day |
+| `GET` | `/dashboard` | Get dashboard statistics |
+| `POST` | `/interview/start` | Start a new interview session |
+| `POST` | `/interview/{id}/next` | Generate the next question |
+| `POST` | `/interview/{id}/answer` | Submit an answer for evaluation |
+| `GET` | `/interview/{id}` | Get current session state |
+| `GET` | `/interview/{id}/feedback` | Get final feedback (completed sessions only) |
+
+Full interactive documentation is available at **http://localhost:8000/docs** when the backend is running.
+
+---
+
+## Environment Variables
+
+All configuration is managed through environment variables. Copy `.env.example` to `.env` and fill in the values.
+
+| Variable | Required | Description |
+|---|---|---|
+| `GEMINI_API_KEY` | ✅ Yes | Your Google Gen AI API key from [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+| `GEMINI_MODEL` | ✅ Yes | The Gemini model to use (e.g. `gemini-2.5-flash-lite-preview-06-17`) |
+| `NEXT_PUBLIC_API_URL` | ✅ Yes | The backend URL for the frontend (e.g. `http://localhost:8000`) |
+| `PORT` | ❌ Optional | Backend port, defaults to `8000` |
+| `ENVIRONMENT` | ❌ Optional | `development` or `production` |
+
+> ⚠️ **Never commit your `.env` file.** It is in `.gitignore`. If you accidentally commit a key, revoke it immediately.
+
+---
+
+## Installation
 
 ### Prerequisites
-- Node.js (for Frontend)
-- Python 3.13+ (for Backend)
 
-### API Keys
-Create a `.env` file in the project root:
-```env
-GEMINI_API_KEY=your_google_gen_ai_key_here
-GEMINI_MODEL=gemini-3.5-flash
-```
-> **Warning**: Never commit your real API key to version control.
+- **Git**
+- **Python 3.13+** (check: `python --version`)
+- **Node.js 20+** (check: `node --version`)
+- A **Google Gemini API key** from [aistudio.google.com](https://aistudio.google.com/app/apikey)
 
-### Installation
+---
 
-#### Backend
+### 1. Clone the Repository
+
 ```bash
-python -m venv backend/venv
-# On Windows
-backend\venv\Scripts\activate
-# On macOS/Linux
-source backend/venv/bin/activate
+git clone https://github.com/Vineet375/NovaForge-ViCodathon.git
+cd "NovaForge - ViCodathon"
+```
 
+---
+
+### 2. Backend Setup
+
+> **Important**: All backend commands must be run from the **project root** directory (not from inside `backend/`). This is because the Python packages use `backend.*` absolute imports, which require the project root to be on the Python path.
+
+**Create and activate the virtual environment:**
+
+```bash
+# Windows (PowerShell)
+python -m venv backend/venv
+backend\venv\Scripts\activate
+
+# macOS / Linux
+python3 -m venv backend/venv
+source backend/venv/bin/activate
+```
+
+**Install dependencies:**
+
+```bash
 pip install -r requirements.txt
 ```
 
-#### Running the Backend Server
+**Create your environment file:**
+
 ```bash
-# On Windows
-backend\venv\Scripts\activate
-uvicorn backend.main:app --reload
+# Windows
+copy .env.example .env
+
+# macOS / Linux
+cp .env.example .env
 ```
 
-#### Frontend
-```bash
-cd frontend
-npm install
+Open `.env` and fill in your `GEMINI_API_KEY` and confirm `GEMINI_MODEL`:
+
+```env
+GEMINI_API_KEY=your_api_key_here
+GEMINI_MODEL=gemini-2.5-flash-lite-preview-06-17
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 ---
 
-## Testing
+### 3. Frontend Setup
 
-### Backend
-The backend utilizes `pytest` with the FastAPI `TestClient` for 100% in-memory validation of domain logic and API routes.
 ```bash
-cd backend
-venv\Scripts\activate
-pytest
+cd frontend
+npm install
+cd ..
 ```
 
-### Frontend
-The frontend codebase enforces extreme strictness via TypeScript and Next.js builds.
+---
+
+## Running the Application
+
+Both the backend and frontend must be running simultaneously in separate terminals.
+
+### Run Backend
+
+> Run from the **project root directory**.
+
+```bash
+# Windows – activate venv first
+backend\venv\Scripts\activate
+uvicorn backend.main:app --reload --port 8000
+
+# macOS / Linux
+source backend/venv/bin/activate
+uvicorn backend.main:app --reload --port 8000
+```
+
+The backend will be available at:
+- **API**: http://localhost:8000
+- **Interactive Docs**: http://localhost:8000/docs
+
+### Run Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend will be available at **http://localhost:3000**.
+
+---
+
+## Running Tests
+
+### Backend Tests (pytest)
+
+> Run from the **project root directory** with the venv activated.
+
+```bash
+# Activate venv first
+backend\venv\Scripts\activate   # Windows
+source backend/venv/bin/activate  # macOS/Linux
+
+pytest -v
+```
+
+Expected output: **17 tests pass**. The test suite uses mock LLM responses — no real API key is needed.
+
+### Frontend Type Check & Build
+
 ```bash
 cd frontend
 npm run build
 ```
-The build process statically analyzes, typchecks, and compiles all SCSS and TS modules, guaranteeing deployment readiness.
 
-## Frontend API Integration
+A successful build validates:
+- Zero TypeScript errors
+- Zero Next.js compilation errors
+- All pages statically analyzable
 
-NovaForge features a strictly typed, centralized API layer inside \src/lib/api\.
-All communication with the backend REST API is localized here to avoid duplicate logic across components.
-The integration consists of:
-1. **API Client (\pi.ts\)**: Handles base HTTP fetching, header injection, and centralized error handling via the custom \ApiError\ class.
-2. **Domain Clients**: Separated out by domain (e.g. \candidate.ts\, \curriculum.ts\, \interview.ts\, \dashboard.ts\) providing typed endpoints.
-3. **Custom Hooks (\src/hooks\)**: Reusable React hooks wrapping API clients for state management (loading, error, data).
-   - \useCandidates\: Fetches available candidate personas.
-   - \useCurriculum\: Loads dynamic curriculum progress.
-   - \useDashboard\: Aggregates statistics and timeline events.
-   - \useInterview\ & \useInterviewSession\: Complex state management for active AI interviews.
+---
 
-## Interview Experience
+## Gemini API Configuration
 
-The core interview flow exists under \/interview/[sessionId]\ and implements an active connection to the backend Gemini AI agent.
-Features include:
-- Real-time AI generated questions based on the candidate persona and curriculum difficulty.
-- Interactive text areas with disabled loading states during evaluation.
-- Live progress bars indicating session status.
-- Immediate localized feedback per answer using the \AI Feedback\ panel.
-- Dynamic follow-up questions generated by the LLM based on specific responses.
-- Complete final evaluation reporting generated upon finishing all 8 questions.
+NovaForge requires the `GEMINI_API_KEY` and `GEMINI_MODEL` environment variables to be set before starting the backend. The application will **fail to start** if either is missing — this is intentional to prevent silent misconfiguration.
 
-## Milestone 11: Premium Product Experience
-- Fully polished Dashboard with Analytics Chart
-- Candidate Detail Profiles in Modals
-- Premium Interview Feedback Report layout
-- Comprehensive Error Boundary & Missing States UI
-- Complete Accessibility review & ARIA labels
+### Choosing a Model
 
-## Milestone 12: Stability and API Hardening
-- Dynamic Gemini API configuration via `.env`.
-- Hardened Gemini API layer with exponential backoff retries and explicit `max_output_tokens` JSON constraints.
-- Complete domain-specific exception handling via `AIEngineException`.
-- Graceful degradation through global FastAPI exception handlers to prevent raw tracebacks.
-- New "Resume Interview" capability via frontend `localStorage` persistence, recovering safely from server reloads or API exhaustion.
+Recommended model: **`gemini-2.5-flash-lite-preview-06-17`**
+
+If you see a `404` error:
+```
+The configured Gemini model '<model_name>' is unavailable or deprecated.
+Please update GEMINI_MODEL in your .env file.
+```
+
+Visit the [Gemini API models page](https://ai.google.dev/gemini-api/docs/models) and update `GEMINI_MODEL` in your `.env` with a currently available model name.
+
+> **Policy**: NovaForge never silently falls back to a different model. If the configured model is unavailable, the application raises a clear, user-friendly error. This prevents unpredictable behavior as Google updates or retires models.
+
+### API Key Safety
+
+- `GEMINI_API_KEY` is **never logged**. All error messages are sanitized to replace the key with `[REDACTED]` before being written to logs.
+- `GEMINI_API_KEY` is **never returned** in any API response body.
+- The `.env` file is gitignored and will never be committed.
+
+---
+
+## Common Troubleshooting
+
+### Backend fails to start: "GEMINI_API_KEY environment variable is not set"
+
+Your `.env` file is missing or the variable is not set. Ensure `.env` exists in the **project root** (not inside `backend/`) and contains `GEMINI_API_KEY=your_key`.
+
+### Backend fails to start: "GEMINI_MODEL environment variable is not set"
+
+Add `GEMINI_MODEL=gemini-2.5-flash-lite-preview-06-17` (or the current recommended model) to your `.env`.
+
+### Interview returns 500: "The configured Gemini model '...' is unavailable or deprecated"
+
+The model in your `.env` is no longer available. Update `GEMINI_MODEL` to a currently available model from the [Gemini API models list](https://ai.google.dev/gemini-api/docs/models).
+
+### Frontend shows "Failed to load session" immediately
+
+The backend is not running or is not reachable at `NEXT_PUBLIC_API_URL`. Ensure the backend is started and the URL in `.env` matches the port.
+
+### `ModuleNotFoundError: No module named 'backend'`
+
+You are running the server from inside the `backend/` directory. **Always run from the project root:**
+```bash
+# Correct
+uvicorn backend.main:app --reload
+
+# Incorrect – do NOT do this
+cd backend
+uvicorn main:app --reload
+```
+
+### pytest: "ModuleNotFoundError"
+
+Same cause as above. Run `pytest` from the **project root**, not from inside `backend/`.
+
+### CORS error in browser
+
+Ensure `NEXT_PUBLIC_API_URL` in `.env` exactly matches the backend address (including port). The backend currently allows all origins (`allow_origins=["*"]`).
+
+---
+
+## Deployment Notes
+
+This project is built for the hackathon demo environment. For production deployment, consider:
+
+- **Sessions**: Replace the in-memory `SessionManager` with a Redis or database-backed store.
+- **CORS**: Restrict `allow_origins` to specific frontend domains.
+- **Secrets**: Use a secrets manager (AWS Secrets Manager, GCP Secret Manager) instead of `.env` files.
+- **Rate Limiting**: Add API rate limiting middleware to protect the Gemini API quota.
+- **Frontend**: Run `npm run build` and serve the `.next/` output with a CDN.
+- **Backend**: Run Uvicorn behind a reverse proxy (Nginx) with multiple workers.
+
+---
+
+## Known Limitations
+
+- **In-memory sessions**: All interview sessions are lost when the backend server restarts. The frontend detects this and gracefully redirects to the Dashboard.
+- **Single-server**: No horizontal scaling support — sessions are not shared across multiple server instances.
+- **Curriculum data is static**: The `candidates.json` and `curriculum.json` files are read-only at startup. No admin UI to manage them.
+- **No authentication**: Any user can start an interview for any candidate ID. Intended for demo/hackathon use.
+- **Model availability**: Gemini model names change. If `GEMINI_MODEL` becomes deprecated, the application will return a clear error with instructions to update `.env`.
+
+---
+
+## Future Improvements
+
+- [ ] Persistent session storage (Redis or PostgreSQL)
+- [ ] Authentication and role-based access control
+- [ ] Candidate onboarding flow (upload resume, self-assessment)
+- [ ] Voice interview mode (Speech-to-Text + Text-to-Speech)
+- [ ] Interviewer dashboard with session analytics and PDF export
+- [ ] Multi-model support (Claude, GPT-4o) via a provider abstraction layer
+- [ ] Streaming responses for real-time question typing animation
+- [ ] Automated scoring calibration based on historical interview data
+
+---
+
+## Authors
+
+**Team NovaForge** — ViCodathon 2026
+
+Built with ❤️ for the **AB Talks ViCodathon 2026** hackathon.
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.
