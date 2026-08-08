@@ -48,8 +48,12 @@ export function CandidateSelector() {
             </div>
           )}
           {!loading && !error && filtered.length === 0 && (
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              No candidates found
+            <div className="p-12 flex flex-col items-center justify-center text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <Search className="h-6 w-6 text-muted-foreground opacity-50" />
+              </div>
+              <p className="text-sm font-medium text-foreground">No candidates found</p>
+              <p className="text-xs text-muted-foreground">Try adjusting your search query.</p>
             </div>
           )}
           {!loading && !error && filtered.map((candidate) => (
