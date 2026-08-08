@@ -1,14 +1,31 @@
+"use client"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { PageContainer, Section, SectionHeader, SectionTitle, SectionDescription } from "@/components/layout/layout-foundation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Play } from "lucide-react"
 import { CandidateSelector } from "@/components/dashboard/candidate-selector"
 import { CurriculumProgress } from "@/components/dashboard/curriculum-progress"
 import { ActivityTimeline } from "@/components/dashboard/activity-timeline"
 import { DashboardStats } from "@/components/dashboard/dashboard-stats"
 
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+
 export default function Home() {
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    const sessionId = localStorage.getItem("active_session_id")
+    setActiveSessionId(sessionId)
+  }, [])
+
+  const handleResume = () => {
+    if (activeSessionId) {
+      router.push(`/interview/${activeSessionId}`)
+    }
+  }
+
   return (
     <DashboardLayout>
       <PageContainer className="py-6 sm:py-8 space-y-8">
@@ -21,7 +38,12 @@ export default function Home() {
               </SectionDescription>
             </SectionHeader>
             <div className="flex shrink-0 items-center gap-3">
-              <Button size="lg" className="w-full sm:w-auto shadow-premium-sm">
+              <Button 
+                size="lg" 
+                className="w-full sm:w-auto shadow-premium-sm"
+                disabled={!activeSessionId}
+                onClick={handleResume}
+              >
                 <Play className="mr-2 h-4 w-4" />
                 Resume Interview
               </Button>

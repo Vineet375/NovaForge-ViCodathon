@@ -14,6 +14,7 @@ export function useInterview() {
       setLoading(true)
       setError(null)
       const res = await InterviewAPI.start({ candidate_id: candidateId })
+      localStorage.setItem("active_session_id", res.session_id)
       toast.success("Interview session started")
       router.push(`/interview/${res.session_id}`)
       return res
@@ -41,6 +42,7 @@ export function useInterviewSession(sessionId: string) {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const fetchSession = useCallback(async () => {
     if (!sessionId) return
@@ -60,6 +62,12 @@ export function useInterviewSession(sessionId: string) {
       }
     } catch (err) {
       if (err instanceof ApiError) {
+        if (err.message.includes("404") || err.message.toLowerCase().includes("not found")) {
+            localStorage.removeItem("active_session_id")
+            router.push("/")
+            toast.error("Session expired or not found")
+            return
+        }
         setError(err.message)
       } else {
         setError("Failed to fetch session")
@@ -68,7 +76,7 @@ export function useInterviewSession(sessionId: string) {
     } finally {
       setLoading(false)
     }
-  }, [sessionId])
+  }, [sessionId, router])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
