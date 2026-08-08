@@ -817,3 +817,45 @@ pm run build\ successfully multiple times throughout the milestone. Fixed a Type
 **Result**: A robust, Vercel/Linear-inspired, highly reusable component library and layout foundation is now established.
 **Known Limitations**: Layout shells do not yet handle active state routing (reserved for page implementation).
 **Next Planned Milestone**: 9 (Frontend Page Implementation)
+
+---
+
+## Prompt 30
+**Timestamp**: 2026-08-08T12:40:00+05:30
+**Milestone**: 9 - Dashboard & Product Experience
+**Objective**: Build the main application dashboard as the primary entry point to NovaForge using the established Milestone 8 design system. Focus on minimal, premium, SaaS-quality design with realistic mocked data.
+**Context**: The backend and foundational UI are complete. The application needs a cohesive, premium home page (\/\) that integrates all the new components into a responsive layout. The design must feel alive with hover states, mock data, and smooth transitions, but without connecting to the real backend yet.
+**Prompt Given**: "Milestone 9: Dashboard & Product Experience... Build the main application dashboard... Dashboard should feel inspired by OpenAI, Linear, Vercel... Implement Hero Section, Statistics Cards, Candidate Selector, Interview Overview, Activity Timeline, Curriculum Progress... UX Requirements: Hover states, responsive spacing, premium whitespace... Do NOT connect backend yet... Commit after every logical subtask."
+**Reasoning**: To achieve a "Vercel/Linear" feel, I structured the dashboard using a strict grid layout bound within the \PageContainer\. I built a \DashboardLayout\ shell wrapping the \Navbar\ and \Sidebar\ components to establish the overall structural hierarchy. I iteratively built the \Statistics Cards\ for quick glances at metrics, followed by a heavily styled \CandidateSelector\ component utilizing custom \Avatar\ and \Badge\ primitives for a rich visual experience. I then built the \CurriculumProgress\ utilizing a bespoke \Progress\ bar component and mapped mock modules to display completion status. Finally, I built a vertical \ActivityTimeline\ utilizing pseudo-elements for the connecting lines to show a chronological history of user actions. All sections utilize native Tailwind utility classes for intrinsic responsiveness (\grid-cols-1 md:grid-cols-2 lg:grid-cols-4\).
+**AI Output Summary**: 
+- Replaced the default Next.js boilerplate in \page.tsx\ with a premium \DashboardLayout\.
+- Created \src/components/dashboard-layout.tsx\ mapping the shell.
+- Created \Badge\ and \Avatar\ primitives manually in \src/components/ui/\ to unblock shadcn dependencies.
+- Built a responsive stats grid using \Card\ primitives displaying completed interviews and active session data.
+- Built \CandidateSelector\ with searchable UI (mocked) and active state selections.
+- Built \CurriculumProgress\ and \Progress\ primitive to show syllabus completion tracking.
+- Built \ActivityTimeline\ utilizing complex CSS pseudo-elements for a clean vertical timeline.
+**Architecture Decisions**: 
+- Opted to keep \page.tsx\ clean by abstracting complex dashboard widgets into \src/components/dashboard/\.
+- Used CSS gradient lines (\g-gradient-to-b\) and absolute pseudo-elements (\efore:\) for the timeline to ensure it scales cleanly on mobile without Javascript positioning.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- \rontend/src/components/layout/dashboard-layout.tsx\
+- \rontend/src/components/ui/badge.tsx\
+- \rontend/src/components/ui/avatar.tsx\
+- \rontend/src/components/ui/progress.tsx\
+- \rontend/src/components/dashboard/candidate-selector.tsx\
+- \rontend/src/components/dashboard/curriculum-progress.tsx\
+- \rontend/src/components/dashboard/activity-timeline.tsx\
+**Files Modified**: 
+- \rontend/src/app/page.tsx\
+- \README.md\
+- \PROMPTS.md\
+**Dependencies Added**: None
+**Git Commit Message**: docs(frontend): update dashboard documentation
+**Testing Performed**: Ran \
+pm run build\ sequentially after every logical widget implementation to verify zero TS/linting regressions. Verified grid collapse on mobile viewports.
+**Result**: A fully responsive, highly polished, data-rich (mocked) SaaS dashboard is now the entry point of the application.
+**Known Limitations**: Mobile sidebar navigation toggle (hamburger menu) is not yet implemented (sidebar currently hides on mobile). Search bar in \CandidateSelector\ is a visual mock only.
+**Next Planned Milestone**: 10 (Interview View / Candidate Flow)
