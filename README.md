@@ -40,7 +40,7 @@ A production-grade AI-powered technical interview system that conducts personali
 
 ## Project Overview
 
-**NovaForge** is an AI interview agent built for the ViCodathon 2026 hackathon. It analyzes a candidate's curriculum progress, learning signals (missions completed, commit days, first-try success rate), and experience profile to dynamically generate personalized technical questions at the appropriate difficulty level.
+**NovaForge** is an AI interview agent built for the ViCodathon 2026 hackathon. It analyzes a candidate's curriculum progress, learning signals (missions completed, commit days, first-try success rate), and experience profile to dynamically generate 4 personalized technical questions at the appropriate difficulty level.
 
 Unlike generic interview tools, NovaForge understands *what the candidate has studied* and tailors every question to their specific curriculum journey — from RAG pipelines and vector databases to full-stack React/FastAPI application development.
 

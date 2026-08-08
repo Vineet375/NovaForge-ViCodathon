@@ -977,7 +977,7 @@ pm run build\ executed 4 times iteratively and cleared all TS compilation warnin
 
 ---
 
-## Milestone 13 � Final Code Freeze / Release Candidate
+## Milestone 13  Final Code Freeze / Release Candidate
 Date: 2026-08-08
 
 ### Summary
@@ -991,13 +991,13 @@ Full production stabilization pass. No new features. Every change is a cleanup, 
 - Added docstring to main.py app factory.
 
 #### fix(backend/interview): deduplicate exception handling and fix stale comments
-- Removed 3� duplicated inline rom backend.services.ai.exceptions import AIEngineException inside except blocks.
+- Removed 3× duplicated inline rom backend.services.ai.exceptions import AIEngineException inside except blocks.
 - Replaced repeated isinstance-guard pattern with clean except (HTTPException, AIEngineException): raise idiom.
 - Fixed factually incorrect comment that said '5 questions' instead of '8 questions'.
 - Removed noise comments from the answer submission flow.
 
 #### fix(backend/dashboard): remove unused Depends import
-- Removed Depends from rom fastapi import APIRouter, Depends � it was never used in this module.
+- Removed Depends from rom fastapi import APIRouter, Depends  it was never used in this module.
 
 #### fix(backend/ai): fix generate_feedback to use real session history and build proper context
 - **Critical fix**: AIService.generate_feedback() was previously called with only a raw session_id string, meaning the LLM received no actual interview Q&A data when generating the final report. The report was essentially hallucinated.
@@ -1025,7 +1025,7 @@ Full production stabilization pass. No new features. Every change is a cleanup, 
 - Removed import { useEffect } from error.tsx (now unused after removing the effect).
 
 #### chore: remove dev artifact e2e.py
-- Deleted e2e.py from the project root � it was a temporary development debugging script, not production code.
+- Deleted e2e.py from the project root  it was a temporary development debugging script, not production code.
 
 ### Documentation Commits
 
@@ -1070,7 +1070,7 @@ Full production stabilization pass. No new features. Every change is a cleanup, 
 - Model is always read from GEMINI_MODEL env var. Never hardcoded.
 - 404 from Gemini returns clear user-friendly message naming the unavailable model.
 - No silent fallback to another model.
-- 429 rate limit: retries up to 3� with continuation.
+- 429 rate limit: retries up to 3× with continuation.
 - 401 auth failure: immediate failure with clear message.
 - Timeout: immediate failure with clear message.
 
@@ -1095,19 +1095,19 @@ Added premium loading states, session picker, countdown timers for rate limits, 
 
 
 =========================================================
-MILESTONE 18.1 – LIVE AI PROVIDER VERIFICATION
+MILESTONE 18.1 â LIVE AI PROVIDER VERIFICATION
 =========================================================
 Completed verification of Gemini failover, NVIDIA fallback, Mock fallback, Session state machine transitions, Test environment separation, and Security audit.
 
 
 =========================================================
-MILESTONE 18.2 – NVIDIA Credential/Model Mapping & Real Provider Verification
+MILESTONE 18.2 â NVIDIA Credential/Model Mapping & Real Provider Verification
 =========================================================
 Fixed NVIDIA provider to strictly map NVIDIA_API_KEY_1 to PRIMARY and NVIDIA_API_KEY_2 to SECONDARY models. Tested structured output parsing with recovery pipeline. Simulated provider fallback logic. All verification tasks complete.
 
 
 =========================================================
-MILESTONE 18.3 – AI Failover Hardening & Latency Optimization
+MILESTONE 18.3 â AI Failover Hardening & Latency Optimization
 =========================================================
 1. Why Milestone 18.3 was required: The live NVIDIA verification exposed timeouts and long waits in the failover chain. Test isolation was also incomplete, causing pytest to run real network requests.
 2. NVIDIA timeout findings: Found that OpenAI client used standard timeouts and retries, creating up to 60s delays on unreachable endpoints.
@@ -1135,3 +1135,18 @@ URGENT LOCAL RUNTIME BUG FIX
 - Added `openai` dependency to `requirements.txt` which was causing `ModuleNotFoundError`.
 - Restricted CORS in `backend/main.py` from `*` to strictly allow `http://localhost:3000` and `http://127.0.0.1:3000`.
 - Verified full local startup and frontend end-to-end interview state.
+
+---
+
+## Milestone 19 – Interview Flow Redesign (4-Question Async Evaluation)
+
+**Objective**: Redesign the interview architecture to remove per-answer feedback loops, implement an asynchronous background-generation pattern, enforce a hard 4-question limit, and consolidate all AI feedback into a single comprehensive evaluation report at the end of the session.
+
+**Key Requirements**:
+1. Limit interviews to exactly 4 questions (`MAX_INTERVIEW_QUESTIONS = 4`).
+2. Remove intermediate `EVALUATING` and `FEEDBACK_READY` states; replace with `FINAL_EVALUATION` state.
+3. Make `POST /answer` idempotent, returning 200 immediately without waiting for AI generation.
+4. Delegate AI question and feedback generation to FastAPI `BackgroundTasks`.
+5. Frontend must be a passive observer of backend state (polling `GENERATING` / `FINAL_EVALUATION`), never triggering AI generation directly.
+
+**Status**: Implemented securely. Evaluated with 18 unit tests guaranteeing state machine integrity and idempotency.
