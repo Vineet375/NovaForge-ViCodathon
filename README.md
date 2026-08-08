@@ -57,6 +57,7 @@ The backend is strictly decoupled into layers:
 Create a `.env` file in the project root:
 ```env
 GEMINI_API_KEY=your_google_gen_ai_key_here
+GEMINI_MODEL=gemini-3.5-flash
 ```
 > **Warning**: Never commit your real API key to version control.
 
@@ -136,3 +137,10 @@ Features include:
 - Premium Interview Feedback Report layout
 - Comprehensive Error Boundary & Missing States UI
 - Complete Accessibility review & ARIA labels
+
+## Milestone 12: Stability and API Hardening
+- Dynamic Gemini API configuration via `.env`.
+- Hardened Gemini API layer with exponential backoff retries and explicit `max_output_tokens` JSON constraints.
+- Complete domain-specific exception handling via `AIEngineException`.
+- Graceful degradation through global FastAPI exception handlers to prevent raw tracebacks.
+- New "Resume Interview" capability via frontend `localStorage` persistence, recovering safely from server reloads or API exhaustion.
