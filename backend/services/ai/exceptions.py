@@ -17,3 +17,7 @@ class LLMTimeoutException(AIEngineException):
 class MissingAPIKeyException(AIEngineException):
     """Raised when the LLM API key is missing from configuration."""
     pass
+
+class ConfigurationException(AIEngineException):
+    """Raised when the application configuration is invalid."""
+    pass
