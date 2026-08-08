@@ -1,13 +1,14 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { PageContainer, Section, SectionHeader, SectionTitle, SectionDescription } from "@/components/layout/layout-foundation"
 import { Button } from "@/components/ui/button"
-import { Play } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Play, TrendingUp, Target, Clock, Zap } from "lucide-react"
 
 export default function Home() {
   return (
     <DashboardLayout>
-      <PageContainer className="py-6 sm:py-8">
-        <Section className="py-0 md:py-0 lg:py-0 mb-8 sm:mb-12">
+      <PageContainer className="py-6 sm:py-8 space-y-8">
+        <Section className="py-0 md:py-0 lg:py-0">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <SectionHeader className="pb-0 md:pb-0">
               <SectionTitle className="text-3xl sm:text-4xl">Good morning, Alex</SectionTitle>
@@ -21,6 +22,59 @@ export default function Home() {
                 Resume Interview
               </Button>
             </div>
+          </div>
+        </Section>
+
+        <Section className="py-0 md:py-0 lg:py-0">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Completed Interviews</CardTitle>
+                <Target className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">12</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  +2 from last month
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">84%</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  +5% improvement
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Questions Answered</CardTitle>
+                <Zap className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">142</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Across 6 domains
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Session</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">Frontend System Design</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  45 minutes remaining
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </Section>
       </PageContainer>
