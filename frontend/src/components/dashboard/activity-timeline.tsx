@@ -41,28 +41,38 @@ export function ActivityTimeline() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-          {data.activities.map((activity) => {
-            const { icon: Icon, color, bg } = getIconAndColors(activity.type)
-            return (
-              <div key={activity.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-background shadow-sm shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bg}`}>
-                    <Icon className={`h-4 w-4 ${color}`} />
+        {data.activities.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+              <Activity className="h-6 w-6 text-muted-foreground opacity-50" />
+            </div>
+            <p className="text-sm font-medium text-foreground">No recent activity</p>
+            <p className="text-xs text-muted-foreground">Activity will appear here once candidates take actions.</p>
+          </div>
+        ) : (
+          <div className="relative space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
+            {data.activities.map((activity) => {
+              const { icon: Icon, color, bg } = getIconAndColors(activity.type)
+              return (
+                <div key={activity.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-background shadow-sm shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bg}`}>
+                      <Icon className={`h-4 w-4 ${color}`} />
+                    </div>
+                  </div>
+                  
+                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-border bg-card/50 shadow-sm transition-all hover:shadow-premium-sm hover:bg-muted/30">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-sm font-semibold text-foreground">{activity.title}</h4>
+                      <span className="text-xs font-medium text-muted-foreground">{activity.time}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{activity.description}</p>
                   </div>
                 </div>
-                
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-border bg-card/50 shadow-sm transition-all hover:shadow-premium-sm hover:bg-muted/30">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="text-sm font-semibold text-foreground">{activity.title}</h4>
-                    <span className="text-xs font-medium text-muted-foreground">{activity.time}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{activity.description}</p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
