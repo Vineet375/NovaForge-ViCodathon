@@ -1089,3 +1089,6 @@ A p p e n d i n g   M i l e s t o n e   1 4   t o   P R O M P T S . m d  
  5 .   S a n i t i z e d   e r r o r   m e s s a g e s   t o   a v o i d   l e a k i n g   J S O N D e c o d e E r r o r s   t o   t h e   U I .  
  6 .   I m p r o v e d   a c c e s s i b i l i t y   w i t h   a u t o - f o c u s i n g   a n s w e r   b o x   i n   i n t e r v i e w   s e s s i o n .  
  
+
+## Milestone 17 - Final UI/UX Polish & Demo Experience
+Added premium loading states, session picker, countdown timers for rate limits, framer-motion transitions, and accessibility improvements for the final demo.
