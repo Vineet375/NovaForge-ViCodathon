@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, ArrowRight, CheckCircle2, MessageSquare, Play, AlertCircle, Clock, Brain } from "lucide-react"
-import { TypingIndicator } from "@/components/ui/typing-indicator"
 import { InterviewReport } from "@/components/interview/interview-report"
 import { AskedQuestion } from "@/lib/api"
 
@@ -47,12 +46,22 @@ export default function InterviewPage() {
     }
   }, [countdown])
 
-  // Auto-fetch first question if none exists and session is initializing
+  const isCompleted = session?.status === "completed"
+  const isGenerating = session?.status === "generating" || session?.status === "initializing"
+  const isFinalEvaluation = session?.status === "final_evaluation"
+  const isQuestionReady = session?.status === "question_ready"
+  const isWaitingForAI = session?.status === "waiting_for_ai"
+  
+  const lastQ = session?.questions_asked && session.questions_asked.length > 0 
+    ? session.questions_asked[session.questions_asked.length - 1] 
+    : null
+
+  // Ensure textarea focuses when a question is ready
   React.useEffect(() => {
-    if (session?.status === "initializing") {
-      nextQuestion()
+    if (isQuestionReady && textareaRef.current) {
+      textareaRef.current.focus()
     }
-  }, [session?.status, nextQuestion])
+  }, [isQuestionReady])
 
   const handleSubmit = async () => {
     if (!answer.trim() || actionLoading) return
@@ -60,8 +69,8 @@ export default function InterviewPage() {
     setAnswer("")
   }
 
-  const handleNext = async () => {
-    await nextQuestion()
+  const handleRetry = async () => {
+    await nextQuestion() // Reusing nextQuestion API endpoint as the retry mechanism
   }
 
   if (loading && !session) {
@@ -130,24 +139,6 @@ export default function InterviewPage() {
     )
   }
 
-  const isCompleted = session.status === "completed"
-  const isGenerating = session.status === "generating" || session.status === "initializing"
-  const isEvaluating = session.status === "evaluating"
-  const isQuestionReady = session.status === "question_ready"
-  const isFeedbackReady = session.status === "feedback_ready"
-  const isWaitingForAI = session.status === "waiting_for_ai"
-  
-  const lastQ = session.questions_asked && session.questions_asked.length > 0 
-    ? session.questions_asked[session.questions_asked.length - 1] 
-    : null
-
-  // Ensure textarea focuses when a question is ready
-  React.useEffect(() => {
-    if (isQuestionReady && textareaRef.current) {
-      textareaRef.current.focus()
-    }
-  }, [isQuestionReady])
-
   return (
     <DashboardLayout>
       <PageContainer className="py-6 space-y-6">
@@ -161,16 +152,16 @@ export default function InterviewPage() {
                   {isCompleted ? "Completed" : "In Progress"}
                 </Badge>
                 <span>•</span>
-                <span>Question {Math.max(1, session.current_question_number)} of 8</span>
+                <span>Question {Math.max(1, session.questions_asked.length)} of 4</span>
               </div>
             </div>
             <div className="w-full md:w-64 space-y-2">
               <div className="flex items-center gap-4 text-sm font-medium w-64">
                 <span className="text-muted-foreground whitespace-nowrap">Progress</span>
                 <div className="flex-1">
-                  <Progress value={Math.max(0, (session.questions_asked.length / 8) * 100)} className="h-2" />
+                  <Progress value={Math.max(0, (session.questions_asked.length / 4) * 100)} className="h-2" />
                 </div>
-                <span>{Math.max(0, Math.round((session.questions_asked.length / 8) * 100))}%</span>
+                <span>{Math.max(0, Math.round((session.questions_asked.length / 4) * 100))}%</span>
               </div>
             </div>
           </div>
@@ -208,7 +199,7 @@ export default function InterviewPage() {
                           </div>
                         </div>
                         <Button 
-                          onClick={handleNext} 
+                          onClick={handleRetry} 
                           disabled={countdown !== null && countdown > 0} 
                           className="mt-4 w-40 shadow-premium-sm"
                           variant="outline"
@@ -234,6 +225,24 @@ export default function InterviewPage() {
                           <p className="text-xs text-center text-muted-foreground animate-pulse">Analyzing your curriculum profile and framing the next technical question.</p>
                         </div>
                       </div>
+                    ) : isFinalEvaluation ? (
+                      <div className="flex flex-col items-center justify-center py-16 space-y-8 animate-in fade-in duration-500">
+                        <div className="flex items-center gap-4">
+                          <div className="relative flex h-12 w-12">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-20 duration-1000"></span>
+                            <span className="relative inline-flex rounded-full h-12 w-12 bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                              <Brain className="h-6 w-6 text-blue-500 animate-pulse" />
+                            </span>
+                          </div>
+                          <h3 className="text-xl font-medium tracking-tight">NovaForge AI is preparing your final evaluation...</h3>
+                        </div>
+                        <div className="w-full max-w-md space-y-3">
+                          <Progress value={undefined} className="h-1.5 w-full bg-muted overflow-hidden relative">
+                            <div className="absolute inset-0 bg-blue-500/50 animate-[indeterminate_2s_infinite_linear]" style={{width: '50%', transformOrigin: 'left'}} />
+                          </Progress>
+                          <p className="text-xs text-center text-muted-foreground animate-pulse">Reviewing all 4 answers and assembling your comprehensive feedback report.</p>
+                        </div>
+                      </div>
                     ) : (
                       <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                         {lastQ?.question_text}
@@ -250,8 +259,8 @@ export default function InterviewPage() {
                         id="answer"
                         value={answer}
                         onChange={(e) => setAnswer(e.target.value)}
-                        disabled={actionLoading || isFeedbackReady || isWaitingForAI || !isQuestionReady}
-                        placeholder={!isQuestionReady ? "Waiting for question..." : "Type your answer here. Be as detailed as possible..."}
+                        disabled={actionLoading || isWaitingForAI || !isQuestionReady}
+                        placeholder={!isQuestionReady ? "Waiting for AI..." : "Type your answer here. Be as detailed as possible..."}
                         className="w-full min-h-[200px] p-4 rounded-xl border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 disabled:cursor-not-allowed resize-y transition-all"
                         aria-label="Answer textarea"
                         ref={textareaRef}
@@ -259,7 +268,6 @@ export default function InterviewPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end pt-2">
-                  {!isFeedbackReady && !isEvaluating ? (
                     <Button 
                       onClick={handleSubmit} 
                       disabled={!answer.trim() || actionLoading || isWaitingForAI || !isQuestionReady}
@@ -268,7 +276,7 @@ export default function InterviewPage() {
                       {actionLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Evaluating...
+                          Submitting...
                         </>
                       ) : (
                         <>
@@ -277,52 +285,8 @@ export default function InterviewPage() {
                         </>
                       )}
                     </Button>
-                  ) : (
-                    <Button 
-                      onClick={handleNext} 
-                      disabled={actionLoading || isEvaluating || isWaitingForAI}
-                      variant="secondary"
-                      className="shadow-premium-sm transition-all duration-300"
-                    >
-                      {actionLoading || isEvaluating ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          Next Question
-                          <Play className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-                  )}
                 </CardFooter>
               </Card>
-              
-              {/* Immediate Feedback Panel */}
-              {(isFeedbackReady || isEvaluating) && (
-                <Card className="shadow-premium bg-muted/20 border-l-4 border-l-primary animate-in slide-in-from-bottom-4 fade-in duration-500">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4 text-primary" />
-                      AI Feedback
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {isEvaluating ? (
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <TypingIndicator />
-                        <span className="animate-pulse">Evaluating your response...</span>
-                      </div>
-                    ) : (
-                      <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                        {lastQ?.feedback}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
             </div>
 
             {/* Right Sidebar */}
@@ -355,9 +319,6 @@ export default function InterviewPage() {
                           <div>
                             <p className="font-medium text-foreground">Question {i + 1}</p>
                             <p className="text-xs text-muted-foreground truncate w-[200px]">{q.question_text}</p>
-                            {q.score !== undefined && (
-                              <Badge variant="secondary" className="mt-1 text-[10px] px-1.5 py-0">Score: {q.score}/10</Badge>
-                            )}
                           </div>
                         </div>
                       ))}

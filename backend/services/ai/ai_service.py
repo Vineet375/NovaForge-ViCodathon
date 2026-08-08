@@ -76,47 +76,7 @@ class AIService(AnswerEvaluationInterface):
             parse_func=ResponseParser.parse_question
         )
 
-    def evaluate_answer(
-        self, question: AskedQuestion, candidate_answer: str
-    ) -> dict:
-        """Evaluate a candidate's answer and return structured feedback."""
-        context = ContextBuilder.build_history_context_for_question(question)
-        prompt = PromptEngine.build_evaluation_prompt(
-            context=context,
-            question=question.question_text,
-            answer=candidate_answer,
-        )
-        
-        return self._generate_with_retry(
-            prompt=prompt,
-            generate_func=self.provider.evaluate_answer,
-            parse_func=ResponseParser.parse_full_evaluation
-        )
 
-    def generate_follow_up(self, question: AskedQuestion) -> Optional[AskedQuestion]:
-        """Generate a targeted follow-up question based on the candidate's answer."""
-        context = ContextBuilder.build_history_context_for_question(question)
-        prompt = PromptEngine.build_follow_up_prompt(
-            context=context,
-            question=question.question_text,
-            answer=question.answer_given or "",
-        )
-        
-        try:
-            parsed_q = self._generate_with_retry(
-                prompt=prompt,
-                generate_func=self.provider.generate_follow_up,
-                parse_func=ResponseParser.parse_question
-            )
-        except ParserRecoveryFailedException:
-            return None
-
-        planned = PlannedQuestion(
-            category=QuestionCategory.TECHNICAL,
-            difficulty=question.planned_question.difficulty,
-            curriculum_day=question.planned_question.curriculum_day,
-        )
-        return AskedQuestion(question_text=parsed_q, planned_question=planned)
 
     def generate_feedback(self, session: InterviewSession) -> dict:
         """Generate a comprehensive final feedback report from the full interview history."""

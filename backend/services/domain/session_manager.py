@@ -22,8 +22,7 @@ class SessionManager:
                 InterviewState.INITIALIZING, 
                 InterviewState.GENERATING,
                 InterviewState.QUESTION_READY,
-                InterviewState.EVALUATING,
-                InterviewState.FEEDBACK_READY,
+                InterviewState.FINAL_EVALUATION,
                 InterviewState.WAITING_FOR_AI
             ]:
                 logger.info(f"Returning existing active session for candidate {candidate.member.id}")
@@ -74,8 +73,7 @@ class SessionManager:
             InterviewState.INITIALIZING, 
             InterviewState.GENERATING,
             InterviewState.QUESTION_READY,
-            InterviewState.EVALUATING,
-            InterviewState.FEEDBACK_READY,
+            InterviewState.FINAL_EVALUATION,
             InterviewState.WAITING_FOR_AI
         }
         return [s for s in self._sessions.values() if s.status in active_states]

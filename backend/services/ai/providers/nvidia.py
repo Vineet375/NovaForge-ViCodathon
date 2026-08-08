@@ -82,11 +82,6 @@ class NvidiaProvider(BaseAIProvider):
     def generate_question(self, prompt: str) -> str:
         return self._call_nvidia(prompt)
 
-    def evaluate_answer(self, prompt: str) -> str:
-        return self._call_nvidia(prompt)
-
-    def generate_follow_up(self, prompt: str) -> str:
-        return self._call_nvidia(prompt)
 
     def generate_feedback(self, prompt: str) -> str:
         return self._call_nvidia(prompt)

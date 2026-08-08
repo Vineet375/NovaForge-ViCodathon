@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response, BackgroundTasks
 from typing import List
 from datetime import datetime, timezone, timedelta
 
@@ -12,7 +12,6 @@ from backend.api.schemas import (
     AnswerRequest,
     AnswerResponse,
     InterviewSessionState,
-    NextQuestionResponse,
     StartInterviewRequest,
     StartInterviewResponse,
     ActiveSessionResponse,
@@ -22,13 +21,14 @@ from backend.models.interview import (
     InterviewState,
     PlannedQuestion,
     QuestionCategory,
+    MAX_INTERVIEW_QUESTIONS,
 )
 from backend.services.ai.exceptions import AIEngineException, LLMRateLimitException
 from backend.utils.logger import logger
 
 router = APIRouter(prefix="/interview", tags=["interview"])
 
-def _check_rate_limit(session, response: Response):
+def _check_rate_limit(session, response: Response = None):
     if session.retry_after:
         now = datetime.now(timezone.utc)
         retry_after_aware = session.retry_after if session.retry_after.tzinfo else session.retry_after.replace(tzinfo=timezone.utc)
@@ -69,12 +69,94 @@ def get_active_sessions(
     return sorted(result, key=lambda x: x.last_updated, reverse=True)
 
 
+def _generate_question_task(
+    session_id: str,
+    session_manager,
+    ai_service,
+    candidate_repo,
+    curriculum_repo,
+):
+    session = session_manager.get_session(session_id)
+    if not session:
+        return
+    
+    candidate = candidate_repo.get_candidate_by_id(session.candidate_id)
+    curriculum = curriculum_repo.get_curriculum()
+
+    planned = PlannedQuestion(
+        category=QuestionCategory.TECHNICAL,
+        curriculum_day=session.current_curriculum_day or 1,
+        difficulty=session.difficulty_level,
+    )
+
+    try:
+        q_text = ai_service.generate_initial_question(
+            session, candidate, curriculum, planned
+        )
+        asked = AskedQuestion(question_text=q_text, planned_question=planned)
+        session_manager.update_progress(session_id, asked)
+        
+        session.status = InterviewState.QUESTION_READY
+        session.retry_after = None
+        session.retry_count = 0
+    except LLMRateLimitException as e:
+        session.status = InterviewState.WAITING_FOR_AI
+        session.last_error = str(e)
+        if hasattr(e, 'retry_after') and e.retry_after:
+             session.retry_after = datetime.now(timezone.utc) + timedelta(seconds=e.retry_after)
+    except (HTTPException, AIEngineException) as e:
+        session.status = InterviewState.WAITING_FOR_AI
+        session.last_error = str(e)
+    except Exception as e:
+        session.status = InterviewState.WAITING_FOR_AI
+        session.last_error = str(e)
+    finally:
+        session.ai_request_in_progress = False
+
+
+def _generate_final_evaluation_task(
+    session_id: str,
+    session_manager,
+    ai_service,
+):
+    session = session_manager.get_session(session_id)
+    if not session:
+        return
+        
+    try:
+        res = ai_service.generate_feedback(session)
+        # Store feedback in session somewhere? We didn't have a place in InterviewSession before except maybe creating one.
+        # Wait, get_feedback used to just return it directly!
+        # If it's a background task, where does the result go?
+        # We must add an `evaluation_report` field to InterviewSession or store it.
+        # Let's check backend/models/interview.py for an evaluation field. If it's missing, I'll need to add it!
+        # For now, let's just add it dynamically to the session object.
+        session.evaluation_report = res
+        session_manager.complete_session(session_id)
+        session.retry_after = None
+    except LLMRateLimitException as e:
+        session.status = InterviewState.WAITING_FOR_AI
+        session.last_error = str(e)
+        if hasattr(e, 'retry_after') and e.retry_after:
+             session.retry_after = datetime.now(timezone.utc) + timedelta(seconds=e.retry_after)
+    except (HTTPException, AIEngineException) as e:
+        session.status = InterviewState.WAITING_FOR_AI
+        session.last_error = str(e)
+    except Exception as e:
+        session.status = InterviewState.WAITING_FOR_AI
+        session.last_error = str(e)
+    finally:
+        session.ai_request_in_progress = False
+
+
 @router.post("/start", response_model=StartInterviewResponse)
 def start_interview(
     request: StartInterviewRequest,
+    background_tasks: BackgroundTasks,
     candidate_repo: CandidateRepoDep,
     curriculum_repo: CurriculumRepoDep,
     session_manager: SessionManagerDep,
+    ai_service: AIServiceDep,
 ):
     candidate = candidate_repo.get_candidate_by_id(request.candidate_id)
     if not candidate:
@@ -86,6 +168,19 @@ def start_interview(
     curriculum = curriculum_repo.get_curriculum()
     session = session_manager.create_session(candidate, curriculum)
     session_manager.start_session(session.session_id)
+    
+    # Start generation automatically
+    session.status = InterviewState.GENERATING
+    session.ai_request_in_progress = True
+    session.last_error = None
+    background_tasks.add_task(
+        _generate_question_task,
+        session.session_id,
+        session_manager,
+        ai_service,
+        candidate_repo,
+        curriculum_repo
+    )
 
     return StartInterviewResponse(
         session_id=session.session_id,
@@ -95,10 +190,52 @@ def start_interview(
     )
 
 
-@router.post("/{session_id}/next", response_model=NextQuestionResponse)
+@router.post("/{session_id}/next")
 def get_next_question(
     session_id: str,
-    response: Response,
+    background_tasks: BackgroundTasks,
+    session_manager: SessionManagerDep,
+    ai_service: AIServiceDep,
+    candidate_repo: CandidateRepoDep,
+    curriculum_repo: CurriculumRepoDep,
+):
+    """Used purely for manual retries when WAITING_FOR_AI."""
+    session = session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    if session.status != InterviewState.WAITING_FOR_AI:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Session is {session.status}, cannot trigger next generation manually",
+        )
+        
+    if len(session.questions_asked) >= MAX_INTERVIEW_QUESTIONS:
+        raise HTTPException(status_code=409, detail="Maximum questions reached")
+
+    _check_rate_limit(session)
+    _check_concurrency(session)
+
+    session.status = InterviewState.GENERATING
+    session.ai_request_in_progress = True
+    session.last_error = None
+    background_tasks.add_task(
+        _generate_question_task,
+        session_id,
+        session_manager,
+        ai_service,
+        candidate_repo,
+        curriculum_repo
+    )
+
+    return {"status": "generating"}
+
+
+@router.post("/{session_id}/answer", response_model=AnswerResponse)
+def answer_question(
+    session_id: str,
+    request: AnswerRequest,
+    background_tasks: BackgroundTasks,
     session_manager: SessionManagerDep,
     ai_service: AIServiceDep,
     candidate_repo: CandidateRepoDep,
@@ -108,141 +245,53 @@ def get_next_question(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # Idempotency check
-    if session.status == InterviewState.QUESTION_READY:
-        if session.questions_asked and not session.questions_asked[-1].answer_given:
-            return NextQuestionResponse(question_text=session.questions_asked[-1].question_text)
-        else:
-            raise HTTPException(status_code=409, detail="State mismatch in QUESTION_READY")
-
-    if session.status not in [InterviewState.INITIALIZING, InterviewState.FEEDBACK_READY, InterviewState.WAITING_FOR_AI]:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Session is {session.status}, cannot fetch next question",
-        )
-
-    _check_rate_limit(session, response)
-    _check_concurrency(session)
-
-    candidate = candidate_repo.get_candidate_by_id(session.candidate_id)
-    curriculum = curriculum_repo.get_curriculum()
-
-    planned = PlannedQuestion(
-        category=QuestionCategory.TECHNICAL,
-        curriculum_day=session.current_curriculum_day or 1,
-        difficulty=session.difficulty_level,
-    )
-
-    session.status = InterviewState.GENERATING
-    session.ai_request_in_progress = True
-    session.last_error = None
-    try:
-        q_text = ai_service.generate_initial_question(
-            session, candidate, curriculum, planned
-        )
-        session.status = InterviewState.QUESTION_READY
-        session.retry_after = None
-        session.retry_count = 0
-    except (HTTPException, AIEngineException) as e:
-        session.status = InterviewState.WAITING_FOR_AI
-        session.last_error = str(e)
-        raise
-    except Exception as e:
-        session.status = InterviewState.WAITING_FOR_AI
-        session.last_error = str(e)
-        raise HTTPException(status_code=500, detail=f"AI Service error: {str(e)}")
-    finally:
-        session.ai_request_in_progress = False
-
-    asked = AskedQuestion(question_text=q_text, planned_question=planned)
-    session_manager.update_progress(session_id, asked)
-
-    return NextQuestionResponse(question_text=asked.question_text)
-
-
-@router.post("/{session_id}/answer", response_model=AnswerResponse)
-def answer_question(
-    session_id: str,
-    request: AnswerRequest,
-    response: Response,
-    session_manager: SessionManagerDep,
-    ai_service: AIServiceDep,
-):
-    session = session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-
     if not session.questions_asked:
         raise HTTPException(status_code=400, detail="No question has been asked yet")
-        
+
     current_question = session.questions_asked[-1]
 
-    # Idempotency check
-    if session.status == InterviewState.FEEDBACK_READY:
-        if current_question.answer_given and current_question.feedback:
-            follow_up_text = None
-            if len(session.questions_asked) > session.current_question_number:
-                follow_up_text = session.questions_asked[-1].question_text
-            return AnswerResponse(
-                feedback=current_question.feedback,
-                follow_up_question=follow_up_text,
-            )
+    # Idempotency check: If this question already has an answer, just return success
+    # and don't trigger anything. The frontend might have refreshed or double-submitted.
+    if current_question.answer_given is not None:
+        return AnswerResponse(feedback="Answer already recorded.", follow_up_question=None)
 
-    if session.status not in [InterviewState.QUESTION_READY, InterviewState.WAITING_FOR_AI]:
+    if session.status not in [InterviewState.QUESTION_READY]:
         raise HTTPException(
             status_code=409,
             detail=f"Session is {session.status}, cannot submit answer",
         )
 
-    _check_rate_limit(session, response)
     _check_concurrency(session)
-    
-    session.status = InterviewState.EVALUATING
-    session.ai_request_in_progress = True
-    session.last_error = None
-    try:
-        eval_data = ai_service.evaluate_answer(current_question, request.answer_text)
-        current_question.answer_given = request.answer_text
-        current_question.feedback = eval_data.get("feedback", "No feedback provided.")
-        try:
-            current_question.score = int(eval_data.get("score", 0))
-        except (ValueError, TypeError):
-            current_question.score = 0
-        current_question.confidence = eval_data.get("confidence", "low")
 
-        follow_up_req = (
-            str(eval_data.get("follow_up_required", "false")).lower() == "true"
+    # 3. Save the answer exactly once
+    current_question.answer_given = request.answer_text
+
+    # 5. Determine if we generate next question or final evaluation
+    if len(session.questions_asked) < MAX_INTERVIEW_QUESTIONS:
+        session.status = InterviewState.GENERATING
+        session.ai_request_in_progress = True
+        background_tasks.add_task(
+            _generate_question_task,
+            session_id,
+            session_manager,
+            ai_service,
+            candidate_repo,
+            curriculum_repo
         )
-        current_question.follow_up_required = follow_up_req
+    else:
+        session.status = InterviewState.FINAL_EVALUATION
+        session.ai_request_in_progress = True
+        background_tasks.add_task(
+            _generate_final_evaluation_task,
+            session_id,
+            session_manager,
+            ai_service
+        )
 
-        follow_up_text = None
-        if follow_up_req:
-            follow_up_q = ai_service.generate_follow_up(current_question)
-            if follow_up_q:
-                session_manager.update_progress(session_id, follow_up_q)
-                follow_up_text = follow_up_q.question_text
-                
-        session.status = InterviewState.FEEDBACK_READY
-        session.retry_after = None
-        session.retry_count = 0
-    except (HTTPException, AIEngineException) as e:
-        session.status = InterviewState.WAITING_FOR_AI
-        session.last_error = str(e)
-        raise
-    except Exception as e:
-        session.status = InterviewState.WAITING_FOR_AI
-        session.last_error = str(e)
-        raise HTTPException(status_code=500, detail=f"AI Service error: {str(e)}")
-    finally:
-        session.ai_request_in_progress = False
-
-    # Complete session after 8 questions with no pending follow-up
-    if session.current_question_number >= 8 and not follow_up_text:
-        session_manager.complete_session(session_id)
-
+    # 7. Return a successful response promptly
     return AnswerResponse(
-        feedback=current_question.feedback,
-        follow_up_question=follow_up_text,
+        feedback="Answer recorded.",
+        follow_up_question=None,
     )
 
 
@@ -255,7 +304,7 @@ def get_session(session_id: str, session_manager: SessionManagerDep):
     return InterviewSessionState(
         session_id=session.session_id,
         status=session.status,
-        current_question_number=session.current_question_number,
+        current_question_number=len(session.questions_asked),
         questions_asked=session.questions_asked,
     )
 
@@ -263,9 +312,7 @@ def get_session(session_id: str, session_manager: SessionManagerDep):
 @router.get("/{session_id}/feedback")
 def get_feedback(
     session_id: str,
-    response: Response,
     session_manager: SessionManagerDep,
-    ai_service: AIServiceDep,
 ):
     session = session_manager.get_session(session_id)
     if not session:
@@ -277,20 +324,4 @@ def get_feedback(
             detail="Feedback is only available for completed sessions",
         )
         
-    _check_rate_limit(session, response)
-    _check_concurrency(session)
-
-    session.ai_request_in_progress = True
-    try:
-        res = ai_service.generate_feedback(session)
-        session.retry_after = None
-        return res
-    except LLMRateLimitException as e:
-        session.retry_after = datetime.now(timezone.utc) + timedelta(seconds=e.retry_after)
-        raise HTTPException(status_code=429, detail=str(e), headers={"Retry-After": str(e.retry_after)})
-    except (HTTPException, AIEngineException):
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI Service error: {str(e)}")
-    finally:
-        session.ai_request_in_progress = False
+    return getattr(session, "evaluation_report", {})

@@ -105,5 +105,5 @@ def test_mock_provider_unique():
     from backend.services.ai.providers.mock import MockProvider
     provider = MockProvider()
     q1 = provider.generate_question("p")
-    q2 = provider.generate_question("p")
+    q2 = provider.generate_question("Candidate Answer: p")
     assert q1 != q2

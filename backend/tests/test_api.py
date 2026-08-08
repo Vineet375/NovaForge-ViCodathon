@@ -54,7 +54,7 @@ def test_interview_flow():
     candidates = client.get("/candidates").json()
     candidate_id = candidates[0]["member"]["id"]
     
-    # 2. Start Interview
+    # 2. Start Interview (Generates Q1 in background synchronously in TestClient)
     req = {"candidate_id": candidate_id}
     start_resp = client.post("/interview/start", json=req)
     assert start_resp.status_code == 200
@@ -62,26 +62,25 @@ def test_interview_flow():
     session_id = start_data["session_id"]
     assert session_id is not None
     
-    # 3. Get Next Question
-    next_resp = client.post(f"/interview/{session_id}/next")
-    assert next_resp.status_code == 200
-    next_data = next_resp.json()
-    assert "question_text" in next_data
-    
-    # 4. Answer Question
-    ans_req = {"answer_text": "This is a test answer."}
-    ans_resp = client.post(f"/interview/{session_id}/answer", json=ans_req)
-    assert ans_resp.status_code == 200
-    ans_data = ans_resp.json()
-    assert "feedback" in ans_data
-    
-    # 5. Get Session State
+    # 3. Verify Q1 is ready
     state_resp = client.get(f"/interview/{session_id}")
     assert state_resp.status_code == 200
     state_data = state_resp.json()
-    assert state_data["status"] == "feedback_ready"
+    assert state_data["status"] == "question_ready"
     assert state_data["current_question_number"] == 1
-    assert len(state_data["questions_asked"]) == 1
+    
+    # 4. Answer Q1 (Generates Q2 in background)
+    ans_req = {"answer_text": "This is a test answer."}
+    ans_resp = client.post(f"/interview/{session_id}/answer", json=ans_req)
+    assert ans_resp.status_code == 200
+    
+    # 5. Verify Q2 is ready
+    state_resp = client.get(f"/interview/{session_id}")
+    assert state_resp.status_code == 200
+    state_data = state_resp.json()
+    assert state_data["status"] == "question_ready"
+    assert state_data["current_question_number"] == 2
+    assert len(state_data["questions_asked"]) == 2
 
 def test_full_interview_flow():
     # 1. Get a valid candidate
@@ -93,30 +92,18 @@ def test_full_interview_flow():
     start_resp = client.post("/interview/start", json=req)
     session_id = start_resp.json()["session_id"]
     
-    # Run through 8 questions
-    for i in range(8):
-        next_resp = client.post(f"/interview/{session_id}/next")
-        assert next_resp.status_code == 200
-        
+    # Run through 4 questions
+    for i in range(4):
         ans_req = {"answer_text": "This is a test answer."}
         ans_resp = client.post(f"/interview/{session_id}/answer", json=ans_req)
-        if ans_resp.status_code != 200:
-            print(f"ERROR: {ans_resp.json()}")
         assert ans_resp.status_code == 200
         
     state_resp = client.get(f"/interview/{session_id}")
     assert state_resp.json()["status"] == "completed"
     
-    # Try getting next when completed (Invalid state transition)
-    bad_next = client.post(f"/interview/{session_id}/next")
-    assert bad_next.status_code == 409
-    assert "cannot fetch next question" in bad_next.json()["detail"].lower()
-    
-    # Try answering when completed (Invalid state transition)
+    # Try answering when completed (Idempotency should return 200)
     bad_ans = client.post(f"/interview/{session_id}/answer", json={"answer_text": "test"})
-    assert bad_ans.status_code == 409
-    
-    # Get Final Feedback
+    assert bad_ans.status_code == 200
     feedback = client.get(f"/interview/{session_id}/feedback")
     assert feedback.status_code == 200
     assert "overall_score" in feedback.json()
@@ -129,8 +116,6 @@ def test_invalid_transitions():
     start_resp = client.post("/interview/start", json=req)
     session_id = start_resp.json()["session_id"]
     
-    # Try to answer before getting the first question
-    ans_req = {"answer_text": "This is a test answer."}
-    ans_resp = client.post(f"/interview/{session_id}/answer", json=ans_req)
-    assert ans_resp.status_code == 400
-    assert "No question has been asked yet" in ans_resp.json()["detail"]
+    # Try to fetch next manually when it's already generated (409)
+    bad_next = client.post(f"/interview/{session_id}/next")
+    assert bad_next.status_code == 409

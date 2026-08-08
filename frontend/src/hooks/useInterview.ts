@@ -116,6 +116,21 @@ export function useInterviewSession(sessionId: string) {
     fetchSession()
   }, [fetchSession])
 
+  // Polling logic for async generation
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout
+    if (session?.status === "generating" || session?.status === "final_evaluation") {
+      intervalId = setInterval(() => {
+        if (!requestInProgress.current) {
+          fetchSession()
+        }
+      }, 3000)
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId)
+    }
+  }, [session?.status, fetchSession])
+
   const nextQuestion = useCallback(async () => {
     if (!sessionId || requestInProgress.current) return
     try {

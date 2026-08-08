@@ -13,7 +13,6 @@ class MockProvider(BaseAIProvider):
 
     def __init__(self):
         pass
-    _call_count = 0
 
     QUESTIONS = [
         "How does the Event Loop work in Node.js and why is it important for asynchronous programming?",
@@ -32,30 +31,24 @@ class MockProvider(BaseAIProvider):
     def provider_name(self) -> str:
         return "Mock Provider"
 
-    def _get_next_question(self) -> str:
-        MockProvider._call_count += 1
-        return self.QUESTIONS[MockProvider._call_count % len(self.QUESTIONS)]
+    def _get_next_question(self, index: int = 0) -> str:
+        return self.QUESTIONS[index % len(self.QUESTIONS)]
 
     def generate_question(self, prompt: str) -> str:
         """Return a structured JSON question string."""
         logger.info("MockProvider: Generating question")
-        q = self._get_next_question()
-        return json.dumps({"question_text": q})
-
-    def evaluate_answer(self, prompt: str) -> str:
-        """Return a structured JSON evaluation string."""
-        logger.info("MockProvider: Evaluating answer")
-        return json.dumps({
-            "feedback": "This is a solid answer! You covered the core concepts well, though you could have added a few more specific examples from industry practices.",
-            "score": 7,
-            "confidence": "medium",
-            "follow_up_required": False
-        })
-
-    def generate_follow_up(self, prompt: str) -> str:
-        """Return a structured JSON follow-up question string."""
-        logger.info("MockProvider: Generating follow-up")
-        q = self._get_next_question()
+        
+        # We'll extract index if we can, but since prompt is just a string, we might just return random or track externally.
+        # Actually, if we want deterministic questions, we can rely on the caller sending the index or we keep a state.
+        # Since we can't reliably parse index from prompt easily without breaking other providers, 
+        # let's just use random for mock if we want it to be stateless, or parse it if we inject it.
+        # The prompt might contain the history. Let's just pick a random one for mock that we haven't picked yet,
+        # or since it's a mock, just return a fixed string. 
+        # Wait, the instructions say: "Use deterministic indexing based on: len(session.questions_asked)"
+        # We don't have session inside generate_question (it takes prompt: str). 
+        # Let's extract the number of previous questions from the prompt history if possible.
+        count = prompt.count("Candidate Answer:")
+        q = self._get_next_question(count)
         return json.dumps({"question_text": q})
 
     def generate_feedback(self, prompt: str) -> str:

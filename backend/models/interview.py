@@ -7,11 +7,12 @@ class InterviewState(str, Enum):
     INITIALIZING = "initializing"
     GENERATING = "generating"
     QUESTION_READY = "question_ready"
-    EVALUATING = "evaluating"
-    FEEDBACK_READY = "feedback_ready"
+    FINAL_EVALUATION = "final_evaluation"
     WAITING_FOR_AI = "waiting_for_ai"
     COMPLETED = "completed"
     FAILED = "failed"
+
+MAX_INTERVIEW_QUESTIONS = 4
 
 class QuestionDifficulty(str, Enum):
     EASY = "easy"
@@ -58,4 +59,5 @@ class InterviewSession(BaseModel):
     last_error: Optional[str] = None
     retry_after: Optional[datetime] = None
     retry_count: int = 0
+    evaluation_report: Optional[dict] = None
     ai_request_in_progress: bool = False

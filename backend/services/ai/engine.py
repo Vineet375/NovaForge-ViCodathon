@@ -56,11 +56,6 @@ class AIEngine(LLMProvider):
     def generate_question(self, prompt: str) -> str:
         return self._execute_with_failover("generate_question", "generate_question", prompt)
 
-    def evaluate_answer(self, prompt: str) -> str:
-        return self._execute_with_failover("evaluate_answer", "evaluate_answer", prompt)
-
-    def generate_follow_up(self, prompt: str) -> str:
-        return self._execute_with_failover("generate_follow_up", "generate_follow_up", prompt)
 
     def generate_feedback(self, prompt: str) -> str:
         return self._execute_with_failover("generate_feedback", "generate_feedback", prompt)

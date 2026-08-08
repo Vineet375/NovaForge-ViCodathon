@@ -140,14 +140,6 @@ class GeminiAdapter(LLMProvider):
         """Send the prompt to the LLM to generate an interview question."""
         return self._call_gemini(prompt)
 
-    def evaluate_answer(self, prompt: str) -> str:
-        """Send the prompt to the LLM to evaluate a candidate's answer."""
-        return self._call_gemini(prompt)
-
-    def generate_follow_up(self, prompt: str) -> str:
-        """Send the prompt to the LLM to generate a follow-up question."""
-        return self._call_gemini(prompt)
-
     def generate_feedback(self, prompt: str) -> str:
         """Send the prompt to the LLM to generate the final feedback report."""
         return self._call_gemini(prompt)
