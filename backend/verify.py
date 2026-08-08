@@ -62,7 +62,7 @@ def test_api_behavior():
     print("-> POST /interview/{id}/next (Testing Demo Fallback on Rate Limit)")
     response = client.post(f"/interview/{session_id}/next")
     assert response.status_code == 200
-    assert response.json()["question_text"] == "Let's pivot slightly. Can you describe a time when you had to optimize a piece of code for performance? What was the outcome?"
+    assert response.json()["question_text"] == "Can you describe a time when you had to optimize a piece of code for performance? What was the outcome?"
     
     response = client.get(f"/interview/{session_id}")
     assert response.json()["status"] == "active"

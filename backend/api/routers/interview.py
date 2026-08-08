@@ -141,7 +141,20 @@ def get_next_question(
         session.retry_count = 0
     except LLMRateLimitException as e:
         # For Hackathon/Demo: Fallback to mock question to avoid blocking the user
-        q_text = "Let's pivot slightly. Can you describe a time when you had to optimize a piece of code for performance? What was the outcome?"
+        mock_questions = [
+            "Can you describe a time when you had to optimize a piece of code for performance? What was the outcome?",
+            "How do you handle memory management and memory leaks in your primary language?",
+            "Describe the architecture of the most complex system you've built. What were the key trade-offs?",
+            "How do you ensure your code is secure against common vulnerabilities like SQL injection or XSS?",
+            "Explain the difference between concurrent and parallel execution. When would you use one over the other?",
+            "How do you approach designing a scalable RESTful API?",
+            "What strategies do you use for debugging a system crash in production?",
+            "Tell me about a time you had a technical disagreement with a team member. How was it resolved?",
+            "Describe how you would implement a distributed caching strategy for a high-traffic web application.",
+            "What is your approach to writing testable code? Give examples of unit vs integration testing."
+        ]
+        q_idx = min(session.current_question_number, len(mock_questions)) - 1
+        q_text = mock_questions[max(0, q_idx) % len(mock_questions)]
         session.status = InterviewState.ACTIVE
         session.retry_after = None
         session.retry_count = 0
@@ -229,6 +242,7 @@ def answer_question(
         session.retry_count = 0
     except LLMRateLimitException as e:
         # For Hackathon/Demo: Fallback to mock evaluation to avoid blocking the user
+        current_question.answer_given = request.answer_text
         current_question.feedback = "This is a solid answer! You covered the core concepts well, though you could have added a few more specific examples."
         current_question.score = 7
         current_question.confidence = "medium"
