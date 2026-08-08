@@ -1,12 +1,11 @@
 from unittest.mock import patch
-
 import pytest
 
 from backend.models.candidate import Candidate, Member, Signals
 from backend.models.curriculum import Curriculum, Day
 from backend.models.interview import InterviewSession
 from backend.services.ai.context_builder import ContextBuilder
-from backend.services.ai.exceptions import InvalidResponseException, MissingAPIKeyException
+from backend.services.ai.exceptions import MissingAPIKeyException, ParserRecoveryFailedException
 from backend.services.ai.gemini_adapter import GeminiAdapter
 from backend.services.ai.prompt_engine import PromptEngine
 from backend.services.ai.response_parser import ResponseParser
@@ -58,6 +57,7 @@ def test_prompt_engine():
     prompt = PromptEngine.build_interview_prompt("ctx", "topic_x", "HARD")
     assert "topic_x" in prompt
     assert "HARD" in prompt
+    assert "ONLY a single valid JSON object" in prompt
 
 
 def test_context_builder(sample_candidate, sample_curriculum, sample_session):
@@ -75,8 +75,30 @@ def test_response_parser_clean():
 
 
 def test_response_parser_empty():
-    with pytest.raises(InvalidResponseException):
+    with pytest.raises(ParserRecoveryFailedException):
         ResponseParser.parse_question("   ")
+
+
+def test_response_parser_malformed_with_recovery():
+    # Test step 3: Extract first balanced JSON object ignoring leading/trailing filler
+    raw = '''
+Here is the question you asked for:
+```json
+{
+  "question_text": "How does React work?"
+}
+```
+Good luck!
+'''
+    parsed = ResponseParser.parse_question(raw)
+    assert parsed == "How does React work?"
+
+    
+def test_response_parser_schema_validation():
+    # Missing 'feedback' key
+    raw = '{"score": 8, "follow_up_required": false, "confidence": "high"}'
+    with pytest.raises(ParserRecoveryFailedException):
+        ResponseParser.parse_full_evaluation(raw)
 
 
 def test_gemini_adapter_missing_key(monkeypatch):
