@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Callable, Optional, TypeVar
 
 from backend.models.candidate import Candidate
 from backend.models.curriculum import Curriculum
@@ -9,17 +9,45 @@ from backend.models.interview import (
     QuestionCategory,
 )
 from backend.services.ai.context_builder import ContextBuilder
+from backend.services.ai.exceptions import ParserRecoveryFailedException
 from backend.services.ai.llm_provider import LLMProvider
 from backend.services.ai.prompt_engine import PromptEngine
 from backend.services.ai.response_parser import ResponseParser
 from backend.services.domain.evaluation_interface import AnswerEvaluationInterface
 
+T = TypeVar('T')
 
 class AIService(AnswerEvaluationInterface):
     """Facade service integrating domain context with LLM operations."""
 
     def __init__(self, provider: LLMProvider):
         self.provider = provider
+
+    def _generate_with_retry(
+        self, 
+        prompt: str, 
+        generate_func: Callable[[str], str], 
+        parse_func: Callable[[str], T]
+    ) -> T:
+        """
+        Executes an LLM generation and parses it.
+        If parsing fails, appends a strict JSON constraint and retries ONCE.
+        """
+        raw_response = generate_func(prompt)
+        try:
+            return parse_func(raw_response)
+        except ParserRecoveryFailedException:
+            # Step 8: Retry Gemini ONCE using a stricter prompt
+            strict_constraint = (
+                "\n\nCRITICAL SYSTEM INSTRUCTION: "
+                "Your previous response was malformed. You MUST return ONLY a single, valid JSON object. "
+                "DO NOT include markdown, code fences, introductory text, conversational filler, or trailing explanations. "
+                "Output RAW JSON ONLY."
+            )
+            strict_prompt = prompt + strict_constraint
+            raw_response_retry = generate_func(strict_prompt)
+            # If this fails, it naturally raises ParserRecoveryFailedException (Step 9)
+            return parse_func(raw_response_retry)
 
     def generate_initial_question(
         self,
@@ -41,8 +69,12 @@ class AIService(AnswerEvaluationInterface):
         prompt = PromptEngine.build_interview_prompt(
             context, topic, planned.difficulty.value
         )
-        raw_response = self.provider.generate_question(prompt)
-        return ResponseParser.parse_question(raw_response)
+        
+        return self._generate_with_retry(
+            prompt=prompt,
+            generate_func=self.provider.generate_question,
+            parse_func=ResponseParser.parse_question
+        )
 
     def evaluate_answer(
         self, question: AskedQuestion, candidate_answer: str
@@ -54,8 +86,12 @@ class AIService(AnswerEvaluationInterface):
             question=question.question_text,
             answer=candidate_answer,
         )
-        raw_response = self.provider.evaluate_answer(prompt)
-        return ResponseParser.parse_full_evaluation(raw_response)
+        
+        return self._generate_with_retry(
+            prompt=prompt,
+            generate_func=self.provider.evaluate_answer,
+            parse_func=ResponseParser.parse_full_evaluation
+        )
 
     def generate_follow_up(self, question: AskedQuestion) -> Optional[AskedQuestion]:
         """Generate a targeted follow-up question based on the candidate's answer."""
@@ -65,10 +101,14 @@ class AIService(AnswerEvaluationInterface):
             question=question.question_text,
             answer=question.answer_given or "",
         )
-        raw_response = self.provider.generate_follow_up(prompt)
-        parsed_q = ResponseParser.parse_question(raw_response)
-
-        if not parsed_q:
+        
+        try:
+            parsed_q = self._generate_with_retry(
+                prompt=prompt,
+                generate_func=self.provider.generate_follow_up,
+                parse_func=ResponseParser.parse_question
+            )
+        except ParserRecoveryFailedException:
             return None
 
         planned = PlannedQuestion(
@@ -83,5 +123,9 @@ class AIService(AnswerEvaluationInterface):
         context = ContextBuilder.build_candidate_summary_context(session)
         history = ContextBuilder.build_history_context(session)
         prompt = PromptEngine.build_feedback_prompt(context=context, history=history)
-        raw_response = self.provider.generate_feedback(prompt)
-        return ResponseParser.parse_final_feedback(raw_response)
+        
+        return self._generate_with_retry(
+            prompt=prompt,
+            generate_func=self.provider.generate_feedback,
+            parse_func=ResponseParser.parse_final_feedback
+        )
