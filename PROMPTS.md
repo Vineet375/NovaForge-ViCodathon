@@ -1127,3 +1127,11 @@ MILESTONE 18.3 – AI Failover Hardening & Latency Optimization
 16. Automated test results: pytest -v executed completely offline with 18/18 passing in <3 seconds.
 17. Build results: npm run build completed successfully.
 18. Remaining limitations: NVIDIA Primary endpoint continues to time out locally, but NVIDIA Secondary succeeded successfully, proving the integration is alive.
+
+
+=========================================================
+URGENT LOCAL RUNTIME BUG FIX
+=========================================================
+- Added `openai` dependency to `requirements.txt` which was causing `ModuleNotFoundError`.
+- Restricted CORS in `backend/main.py` from `*` to strictly allow `http://localhost:3000` and `http://127.0.0.1:3000`.
+- Verified full local startup and frontend end-to-end interview state.
