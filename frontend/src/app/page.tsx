@@ -45,6 +45,7 @@ export default function Home() {
               <SectionDescription>
                 You have an interview scheduled for tomorrow. Keep preparing!
               </SectionDescription>
+            </SectionHeader>
           </div>
         </Section>
 
