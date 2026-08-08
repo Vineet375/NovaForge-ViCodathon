@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Play, TrendingUp, Target, Clock, Zap } from "lucide-react"
 import { CandidateSelector } from "@/components/dashboard/candidate-selector"
+import { CurriculumProgress } from "@/components/dashboard/curriculum-progress"
 
 export default function Home() {
   return (
@@ -82,7 +83,7 @@ export default function Home() {
         <Section className="py-0 md:py-0 lg:py-0">
           <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-8">
-              {/* Future Interview Overview and Curriculum Progress will go here */}
+              <CurriculumProgress />
             </div>
             
             <div className="space-y-8">
