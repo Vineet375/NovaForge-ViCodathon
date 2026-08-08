@@ -22,9 +22,14 @@ app.add_middleware(
 @app.exception_handler(AIEngineException)
 async def ai_engine_exception_handler(request: Request, exc: AIEngineException):
     """Translate all AI engine exceptions into clean JSON error responses."""
+    from backend.services.ai.exceptions import ParserRecoveryFailedException
+    detail = str(exc)
+    if isinstance(exc, ParserRecoveryFailedException):
+        detail = "The AI returned an unexpected response format. Please try again."
+        
     return JSONResponse(
         status_code=500,
-        content={"detail": str(exc)},
+        content={"detail": detail},
     )
 
 

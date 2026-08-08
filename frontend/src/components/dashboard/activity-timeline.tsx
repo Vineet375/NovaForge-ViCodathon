@@ -3,14 +3,30 @@ import * as React from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Activity, Code, MessageSquare, CheckCircle, Info, Loader2 } from "lucide-react"
 import { useDashboard } from "@/hooks/useDashboard"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function ActivityTimeline() {
   const { data, loading, error } = useDashboard()
 
   if (loading) {
     return (
-      <Card className="shadow-premium h-[400px] flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <Card className="shadow-premium">
+        <CardHeader className="pb-4">
+          <Skeleton className="h-6 w-[150px]" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6 p-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex gap-4">
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-full max-w-[200px]" />
+                  <Skeleton className="h-3 w-full max-w-[300px]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
       </Card>
     )
   }

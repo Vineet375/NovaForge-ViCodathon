@@ -12,7 +12,8 @@ class InvalidResponseException(AIEngineException):
 
 class ParserRecoveryFailedException(AIEngineException):
     """Raised when the robust JSON parser exhausts all recovery attempts."""
-    pass
+    def __init__(self, message="The AI returned an unexpected response format. Please try again."):
+        super().__init__(message)
 
 class LLMTimeoutException(AIEngineException):
     """Raised when the LLM provider API times out."""

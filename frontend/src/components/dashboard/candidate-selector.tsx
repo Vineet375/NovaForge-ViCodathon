@@ -8,6 +8,7 @@ import { useCandidates } from "@/hooks/useCandidates"
 import { useInterview } from "@/hooks/useInterview"
 import { Candidate } from "@/lib/api"
 import { CandidateModal } from "@/components/dashboard/candidate-modal"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function CandidateSelector() {
   const { candidates, loading, error } = useCandidates()
@@ -42,8 +43,16 @@ export function CandidateSelector() {
         </div>
         <div className="flex flex-col max-h-[400px] overflow-y-auto" role="region" aria-label="Candidates list">
           {loading && (
-            <div className="p-8 flex justify-center text-muted-foreground">
-              <Loader2 className="h-6 w-6 animate-spin" />
+            <div className="p-4 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-[150px]" />
+                    <Skeleton className="h-3 w-[100px]" />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
           {error && (

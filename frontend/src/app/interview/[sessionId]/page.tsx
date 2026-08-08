@@ -32,6 +32,14 @@ export default function InterviewPage() {
 
   const [answer, setAnswer] = React.useState("")
   const [currentFeedback, setCurrentFeedback] = React.useState<string | null>(null)
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+
+  // Auto-focus textarea when a new question is loaded and no feedback is shown
+  React.useEffect(() => {
+    if (currentQuestion && !currentFeedback && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [currentQuestion, currentFeedback])
 
   // Auto-fetch first question if none exists and session is active
   React.useEffect(() => {
@@ -57,10 +65,44 @@ export default function InterviewPage() {
   if (loading && !session) {
     return (
       <DashboardLayout>
-        <PageContainer className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground font-medium">Loading Interview Session...</p>
+        <PageContainer className="py-6 space-y-6">
+          <Section className="py-0 md:py-0 lg:py-0">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div className="space-y-2">
+                <div className="h-8 w-64 bg-muted animate-pulse rounded-md"></div>
+                <div className="h-4 w-48 bg-muted animate-pulse rounded-md"></div>
+              </div>
+              <div className="w-full md:w-64 space-y-2">
+                <div className="h-4 w-full bg-muted animate-pulse rounded-md"></div>
+                <div className="h-2 w-full bg-muted animate-pulse rounded-md"></div>
+              </div>
+            </div>
+          </Section>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="shadow-premium overflow-hidden">
+                <div className="h-1.5 w-full bg-muted animate-pulse" />
+                <CardHeader>
+                  <div className="h-6 w-3/4 bg-muted animate-pulse rounded-md"></div>
+                  <div className="h-6 w-1/2 bg-muted animate-pulse rounded-md mt-2"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full min-h-[200px] bg-muted animate-pulse rounded-xl"></div>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="space-y-6">
+              <Card className="shadow-premium">
+                <CardHeader>
+                  <div className="h-5 w-40 bg-muted animate-pulse rounded-md"></div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="h-4 w-full bg-muted animate-pulse rounded-md"></div>
+                  <div className="h-4 w-5/6 bg-muted animate-pulse rounded-md"></div>
+                  <div className="h-4 w-4/6 bg-muted animate-pulse rounded-md"></div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </PageContainer>
       </DashboardLayout>
@@ -149,6 +191,7 @@ export default function InterviewPage() {
                       placeholder="Type your answer here. Be as detailed as possible..."
                       className="w-full min-h-[200px] p-4 rounded-xl border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed resize-y"
                       aria-label="Answer textarea"
+                      ref={textareaRef}
                     />
                   </div>
                 </CardContent>
