@@ -10,6 +10,10 @@ class InvalidResponseException(AIEngineException):
     """Raised when the LLM returns a malformed response that cannot be parsed."""
     pass
 
+class ParserRecoveryFailedException(AIEngineException):
+    """Raised when the robust JSON parser exhausts all recovery attempts."""
+    pass
+
 class LLMTimeoutException(AIEngineException):
     """Raised when the LLM provider API times out."""
     pass
