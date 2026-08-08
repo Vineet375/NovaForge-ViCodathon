@@ -31,17 +31,17 @@ def get_dashboard_data(
     curriculum = curriculum_repo.get_curriculum()
     
     total_candidates = len(candidates)
-    total_modules = sum(len(day.modules) for day in curriculum.days)
+    total_modules = len(curriculum.modules)
     
-    active_sessions = len(session_manager.sessions)
-    completed_sessions = sum(1 for s in session_manager.sessions.values() if s.status.value == "completed")
+    active_sessions = len(session_manager._sessions)
+    completed_sessions = sum(1 for s in session_manager._sessions.values() if s.status.value == "completed")
     
     # Calculate questions answered across all sessions
-    total_questions = sum(len(s.questions_asked) for s in session_manager.sessions.values())
+    total_questions = sum(len(s.questions_asked) for s in session_manager._sessions.values())
     
     # Calculate average score across completed questions
     all_scores = [
-        q.score for s in session_manager.sessions.values() 
+        q.score for s in session_manager._sessions.values() 
         for q in s.questions_asked 
         if getattr(q, 'score', None) is not None
     ]
@@ -49,7 +49,7 @@ def get_dashboard_data(
     
     # Generate dynamic activities based on recent sessions
     activities = []
-    for s_id, session in list(session_manager.sessions.items())[-3:]:
+    for s_id, session in list(session_manager._sessions.items())[-3:]:
         candidate = candidate_repo.get_candidate_by_id(session.candidate_id)
         name = candidate.member.name if candidate else "Unknown"
         

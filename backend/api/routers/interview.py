@@ -58,6 +58,9 @@ def get_next_question(
     try:
         q_text = ai_service.generate_initial_question(session, candidate, curriculum, planned)
     except Exception as e:
+        if isinstance(e, HTTPException): raise e
+        from backend.services.ai.exceptions import AIEngineException
+        if isinstance(e, AIEngineException): raise e
         raise HTTPException(status_code=500, detail=f"AI Service error: {str(e)}")
         
     asked = AskedQuestion(
@@ -96,6 +99,9 @@ def answer_question(
     try:
         eval_data = ai_service.evaluate_answer(current_question, request.answer_text)
     except Exception as e:
+        if isinstance(e, HTTPException): raise e
+        from backend.services.ai.exceptions import AIEngineException
+        if isinstance(e, AIEngineException): raise e
         raise HTTPException(status_code=500, detail=f"AI Service error: {str(e)}")
         
     current_question.feedback = eval_data.get("feedback", "No feedback provided.")
@@ -105,7 +111,6 @@ def answer_question(
         current_question.score = 0
     current_question.confidence = eval_data.get("confidence", "low")
     
-    passed = current_question.score >= 5
     follow_up_req = str(eval_data.get("follow_up_required", "false")).lower() == "true"
     current_question.follow_up_required = follow_up_req
     
@@ -117,7 +122,7 @@ def answer_question(
                 # Add it to the session
                 session_manager.update_progress(session_id, follow_up_q)
                 follow_up_text = follow_up_q.question_text
-        except Exception as e:
+        except Exception:
             # We don't crash the main answer submission if follow-up fails
             pass
             
@@ -160,4 +165,7 @@ def get_feedback(
         feedback_data = ai_service.generate_feedback(session_id)
         return feedback_data
     except Exception as e:
+        if isinstance(e, HTTPException): raise e
+        from backend.services.ai.exceptions import AIEngineException
+        if isinstance(e, AIEngineException): raise e
         raise HTTPException(status_code=500, detail=f"AI Service error: {str(e)}")

@@ -18,6 +18,17 @@ app.add_middleware(
 
 from backend.api.routers import health, candidate, curriculum, interview, dashboard
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from backend.services.ai.exceptions import AIEngineException
+
+@app.exception_handler(AIEngineException)
+async def ai_engine_exception_handler(request: Request, exc: AIEngineException):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+    )
+
 app.include_router(health.router)
 app.include_router(candidate.router)
 app.include_router(curriculum.router)
