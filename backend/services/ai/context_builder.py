@@ -92,7 +92,7 @@ class ContextBuilder:
 
         hist_context = ContextBuilder.build_history_context(session)
 
-        total_questions = 8
+        total_questions = 4
         asked = len(session.questions_asked)
         remaining = max(0, total_questions - asked)
         plan_context = (

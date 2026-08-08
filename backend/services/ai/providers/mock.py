@@ -47,7 +47,12 @@ class MockProvider(BaseAIProvider):
         # Wait, the instructions say: "Use deterministic indexing based on: len(session.questions_asked)"
         # We don't have session inside generate_question (it takes prompt: str). 
         # Let's extract the number of previous questions from the prompt history if possible.
-        count = prompt.count("Candidate Answer:")
+        import re
+        match = re.search(r"Asked: (\d+)", prompt)
+        if match:
+            count = int(match.group(1))
+        else:
+            count = prompt.count("Candidate Answer:") + prompt.count("\nA")
         q = self._get_next_question(count)
         return json.dumps({"question_text": q})
 
