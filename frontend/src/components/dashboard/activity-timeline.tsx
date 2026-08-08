@@ -1,7 +1,7 @@
 "use client"
 import * as React from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Activity, Code, MessageSquare, CheckCircle, Info, AlertTriangle, Loader2 } from "lucide-react"
+import { Activity, Code, MessageSquare, CheckCircle, Info, Loader2 } from "lucide-react"
 import { useDashboard } from "@/hooks/useDashboard"
 
 export function ActivityTimeline() {
@@ -42,7 +42,7 @@ export function ActivityTimeline() {
       </CardHeader>
       <CardContent>
         <div className="relative space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-          {data.activities.map((activity, index) => {
+          {data.activities.map((activity) => {
             const { icon: Icon, color, bg } = getIconAndColors(activity.type)
             return (
               <div key={activity.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">

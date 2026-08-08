@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Target, TrendingUp, Zap, Clock, Loader2 } from "lucide-react"
+import { Target, TrendingUp, Zap, Clock } from "lucide-react"
 import { useDashboard } from "@/hooks/useDashboard"
 
 export function DashboardStats() {

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, ArrowRight, CheckCircle2, MessageSquare, Play, AlertCircle } from "lucide-react"
 import { TypingIndicator } from "@/components/ui/typing-indicator"
 import { InterviewReport } from "@/components/interview/interview-report"
+import { AskedQuestion } from "@/lib/api"
 
 export default function InterviewPage() {
   const params = useParams()
@@ -30,7 +31,7 @@ export default function InterviewPage() {
   } = useInterviewSession(sessionId)
 
   const [answer, setAnswer] = React.useState("")
-  const [currentFeedback, setCurrentFeedback] = React.useState<any>(null)
+  const [currentFeedback, setCurrentFeedback] = React.useState<string | null>(null)
 
   // Auto-fetch first question if none exists and session is active
   React.useEffect(() => {
@@ -250,7 +251,7 @@ export default function InterviewPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4 relative before:absolute before:inset-0 before:ml-[11px] before:w-px before:bg-border">
-                      {session.questions_asked.map((q: any, i: number) => (
+                      {session.questions_asked.map((q: AskedQuestion, i: number) => (
                         <div key={i} className="relative flex gap-3 text-sm">
                           <div className={`mt-0.5 w-6 h-6 rounded-full flex items-center justify-center border-2 bg-background z-10 shrink-0 ${q.answer_given ? 'border-primary' : 'border-muted'}`}>
                             {q.answer_given && <CheckCircle2 className="h-3 w-3 text-primary" />}

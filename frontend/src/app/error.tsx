@@ -6,6 +6,8 @@ import { PageContainer } from '@/components/layout/layout-foundation'
 import { Button } from '@/components/ui/button'
 import { ServerCrash } from 'lucide-react'
 
+import { useRouter } from 'next/navigation'
+
 export default function Error({
   error,
   reset,
@@ -13,6 +15,8 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const router = useRouter()
+  
   useEffect(() => {
     // Log the error to an error reporting service
     console.error(error)
@@ -42,7 +46,7 @@ export default function Error({
             >
               Try Again
             </Button>
-            <Button variant="outline" size="lg" onClick={() => window.location.href = '/'}>
+            <Button variant="outline" size="lg" onClick={() => router.push('/')}>
               Go to Dashboard
             </Button>
           </div>

@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { SidebarContainer, SidebarHeader, SidebarContent, SidebarItem } from "./sidebar"
+import { SidebarContainer, SidebarContent, SidebarItem } from "./sidebar"
 import { NavbarContainer, NavbarBrand, NavbarNav } from "./navbar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LayoutDashboard, Users, BookOpen, Settings, Briefcase } from "lucide-react"

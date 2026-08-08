@@ -12,7 +12,7 @@ export default function SettingsPage() {
   const [backendStatus, setBackendStatus] = React.useState<"checking" | "connected" | "error">("checking")
   
   React.useEffect(() => {
-    fetchApi<any>("/health")
+    fetchApi<unknown>("/health")
       .then(() => setBackendStatus("connected"))
       .catch(() => setBackendStatus("error"))
   }, [])
@@ -125,7 +125,7 @@ export default function SettingsPage() {
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 NovaForge is a next-generation AI interviewing platform built for ViCodathon 2026. 
-                It leverages advanced Retrieval-Augmented Generation (RAG) and Google's Gemini models 
+                It leverages advanced Retrieval-Augmented Generation (RAG) and Google&apos;s Gemini models 
                 to conduct intelligent, adaptive technical interviews.
               </p>
             </CardContent>

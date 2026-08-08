@@ -61,7 +61,7 @@ const SidebarItem = React.forwardRef<
       <Link
         href={href}
         className={commonClasses}
-        {...(props as any)}
+        {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
       />
     )
   }
