@@ -7,7 +7,6 @@ import { CandidateSelector } from "@/components/dashboard/candidate-selector"
 import { CurriculumProgress } from "@/components/dashboard/curriculum-progress"
 import { ActivityTimeline } from "@/components/dashboard/activity-timeline"
 import { DashboardStats } from "@/components/dashboard/dashboard-stats"
-import { AnalyticsChart } from "@/components/dashboard/analytics-chart"
 
 export default function Home() {
   return (
@@ -42,7 +41,6 @@ export default function Home() {
             </div>
             
             <div className="space-y-8">
-              <AnalyticsChart />
               <div>
                 <h3 className="text-lg font-medium mb-4">Select Candidate</h3>
                 <CandidateSelector />

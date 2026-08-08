@@ -1,8 +1,7 @@
 "use client"
 import * as React from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { BookOpen, CheckCircle2, Loader2 } from "lucide-react"
+import { BookOpen, Loader2 } from "lucide-react"
 import { useCurriculum } from "@/hooks/useCurriculum"
 
 export function CurriculumProgress() {
@@ -24,17 +23,7 @@ export function CurriculumProgress() {
     )
   }
 
-  // Calculate mock progress since the backend doesn't store per-user progress yet
-  const modules = curriculum.days.map((day, index) => ({
-    id: `m${day.day}`,
-    title: day.title,
-    progress: index === 0 ? 100 : index === 1 ? 65 : 0,
-    status: index === 0 ? "completed" : index === 1 ? "in-progress" : "not-started"
-  }))
-
-  const completed = modules.filter(m => m.progress === 100).length
-  const total = modules.length
-  const overallProgress = Math.round((modules.reduce((acc, m) => acc + m.progress, 0)) / total)
+  const total = curriculum.days.length
 
   return (
     <Card className="shadow-premium">
@@ -42,46 +31,41 @@ export function CurriculumProgress() {
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
-            Curriculum Progress
+            Curriculum Overview
           </CardTitle>
           <span className="text-sm font-medium bg-primary/10 text-primary px-2.5 py-0.5 rounded-full">
-            {completed}/{total} Completed
+            {total} Days
           </span>
-        </div>
-        <div className="mt-4">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-muted-foreground font-medium">Overall Completion</span>
-            <span className="font-bold">{overallProgress}%</span>
-          </div>
-          <Progress value={overallProgress} className="h-2.5" />
         </div>
       </CardHeader>
       <CardContent className="pt-4 p-0">
         <div className="flex flex-col">
-          {modules.map((mod, index) => (
+          {curriculum.days.map((day, index) => (
             <div 
-              key={mod.id} 
-              className={`flex items-center gap-4 p-4 transition-colors hover:bg-muted/30 ${index !== modules.length - 1 ? 'border-b border-border/50' : ''}`}
+              key={day.day} 
+              className={`flex items-start gap-4 p-4 transition-colors hover:bg-muted/30 ${index !== curriculum.days.length - 1 ? 'border-b border-border/50' : ''}`}
             >
               <div className="flex-shrink-0 mt-0.5">
-                {mod.progress === 100 ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                ) : (
-                  <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center">
-                    {mod.progress > 0 && <div className="h-2 w-2 rounded-full bg-primary" />}
-                  </div>
-                )}
+                <div className="h-6 w-6 rounded-full border-2 border-primary flex items-center justify-center text-xs font-bold text-primary">
+                  {day.day}
+                </div>
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className={`text-sm font-medium truncate ${mod.progress === 100 ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
-                  Day {index + 1}: {mod.title}
+                <h4 className="text-sm font-semibold text-foreground">
+                  {day.title}
                 </h4>
-                {mod.progress > 0 && mod.progress < 100 && (
-                  <div className="flex items-center gap-3 mt-2">
-                    <Progress value={mod.progress} className="h-1.5 flex-1" />
-                    <span className="text-xs text-muted-foreground font-medium w-8">{mod.progress}%</span>
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {day.tools.slice(0, 3).map((tool) => (
+                    <span key={tool} className="text-xs bg-muted px-2 py-0.5 rounded-md text-muted-foreground">
+                      {tool}
+                    </span>
+                  ))}
+                  {day.tools.length > 3 && (
+                    <span className="text-xs bg-muted px-2 py-0.5 rounded-md text-muted-foreground">
+                      +{day.tools.length - 3} more
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))}

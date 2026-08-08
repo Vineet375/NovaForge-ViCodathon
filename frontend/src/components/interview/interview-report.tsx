@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts"
 import { Target, Brain, Download, ChevronRight, CheckCircle2 } from "lucide-react"
 
 interface InterviewReportProps {
@@ -14,22 +13,18 @@ interface InterviewReportProps {
 }
 
 export function InterviewReport({ feedback, onClose }: InterviewReportProps) {
-  // Parse feedback strings or assume it's already an object
-  // Since the backend might return raw markdown or an object, we gracefully handle both
+  // Gracefully handle both string and structured JSON responses
   const isObject = typeof feedback === "object" && feedback !== null
-  const summary = isObject ? feedback.summary : feedback
+  const summary = isObject ? (feedback.interview_summary || feedback.summary || "No summary provided.") : (feedback || "No summary provided.")
+  const overallScore = isObject && feedback.overall_score ? feedback.overall_score : "N/A"
   
-  // Mock radar data based on typical interview domains
-  const radarData = [
-    { subject: 'System Design', A: 85, fullMark: 100 },
-    { subject: 'Algorithms', A: 70, fullMark: 100 },
-    { subject: 'Communication', A: 90, fullMark: 100 },
-    { subject: 'React/Frontend', A: 88, fullMark: 100 },
-    { subject: 'Problem Solving', A: 75, fullMark: 100 },
-    { subject: 'Best Practices', A: 80, fullMark: 100 },
-  ]
-
-  const overallScore = 81
+  const strengths = isObject && Array.isArray(feedback.strengths) && feedback.strengths.length > 0 
+    ? feedback.strengths 
+    : ["No specific strengths identified."]
+    
+  const weaknesses = isObject && Array.isArray(feedback.weaknesses) && feedback.weaknesses.length > 0 
+    ? feedback.weaknesses 
+    : ["No specific growth areas identified."]
 
   return (
     <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
@@ -44,7 +39,7 @@ export function InterviewReport({ feedback, onClose }: InterviewReportProps) {
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Left Column: Overall Score & Radar */}
+        {/* Left Column: Overall Score */}
         <div className="md:col-span-1 space-y-6">
           <Card className="shadow-premium overflow-hidden relative">
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
@@ -52,35 +47,13 @@ export function InterviewReport({ feedback, onClose }: InterviewReportProps) {
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Overall Score</div>
               <div className="flex items-end justify-center gap-1 mb-2">
                 <span className="text-5xl font-bold text-foreground">{overallScore}</span>
-                <span className="text-xl font-medium text-muted-foreground mb-1">/100</span>
+                {overallScore !== "N/A" && <span className="text-xl font-medium text-muted-foreground mb-1">/100</span>}
               </div>
-              <Badge variant="secondary" className="bg-green-500/10 text-green-500 hover:bg-green-500/20">
-                Strong Performance
-              </Badge>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-premium">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Domain Mastery</CardTitle>
-            </CardHeader>
-            <CardContent className="px-2">
-              <div className="h-[250px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                    <PolarGrid stroke="hsl(var(--border))" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: "hsl(var(--foreground))", fontSize: 10 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                    <Radar
-                      name="Candidate"
-                      dataKey="A"
-                      stroke="hsl(var(--primary))"
-                      fill="hsl(var(--primary))"
-                      fillOpacity={0.4}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
+              {overallScore !== "N/A" && overallScore >= 70 && (
+                <Badge variant="secondary" className="bg-green-500/10 text-green-500 hover:bg-green-500/20 mt-2">
+                  Strong Performance
+                </Badge>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -106,9 +79,9 @@ export function InterviewReport({ feedback, onClose }: InterviewReportProps) {
                     Key Strengths
                   </h4>
                   <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• Clear communication of architectural tradeoffs</li>
-                    <li>• Strong understanding of state management</li>
-                    <li>• Good handling of edge cases</li>
+                    {strengths.map((str: string, i: number) => (
+                      <li key={i}>• {str}</li>
+                    ))}
                   </ul>
                 </div>
                 <div className="space-y-3">
@@ -117,8 +90,9 @@ export function InterviewReport({ feedback, onClose }: InterviewReportProps) {
                     Growth Areas
                   </h4>
                   <ul className="text-sm text-muted-foreground space-y-2">
-                    <li>• Algorithm time complexity optimization</li>
-                    <li>• Detailed database schema normalization</li>
+                    {weaknesses.map((wk: string, i: number) => (
+                      <li key={i}>• {wk}</li>
+                    ))}
                   </ul>
                 </div>
               </div>
