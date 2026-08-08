@@ -22,6 +22,20 @@ export function CandidateModal({ candidate, onClose, onStart, isStarting }: Cand
     }
   }, [])
 
+  const techStack = Array.from(new Set(
+    candidate.missions
+      .filter(m => m.passed)
+      .map(m => {
+        if (m.title.includes("Embeddings") || m.title.includes("Vector")) return "Vector DB"
+        if (m.title.includes("Prompt")) return "Prompt Eng"
+        if (m.title.includes("API") || m.title.includes("Backend")) return "Backend API"
+        if (m.title.includes("Agent")) return "Agentic AI"
+        if (m.title.includes("Frontend")) return "React"
+        if (m.title.includes("Data")) return "Data Processing"
+        return "AI Core"
+      })
+  ))
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="absolute inset-0" onClick={onClose} />
@@ -37,13 +51,13 @@ export function CandidateModal({ candidate, onClose, onStart, isStarting }: Cand
         <CardHeader className="pb-4 border-b border-border">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20 text-xl font-bold text-primary">
-              {candidate.name.substring(0, 2).toUpperCase()}
+              {candidate.member.name.substring(0, 2).toUpperCase()}
             </div>
             <div>
-              <CardTitle className="text-2xl">{candidate.name}</CardTitle>
+              <CardTitle className="text-2xl">{candidate.member.name}</CardTitle>
               <div className="flex items-center gap-2 mt-1 text-muted-foreground">
                 <Briefcase className="h-4 w-4" />
-                <span>{candidate.preferred_role} • {candidate.experience_level}</span>
+                <span>{candidate.member.jobRole} • {candidate.member.yearsExperience} yrs exp</span>
               </div>
             </div>
           </div>
@@ -56,11 +70,15 @@ export function CandidateModal({ candidate, onClose, onStart, isStarting }: Cand
               Technical Stack
             </h4>
             <div className="flex flex-wrap gap-2">
-              {candidate.tech_stack.map(skill => (
-                <Badge key={skill} variant="secondary" className="px-2.5 py-1">
-                  {skill}
-                </Badge>
-              ))}
+              {techStack.length > 0 ? (
+                techStack.map(skill => (
+                  <Badge key={skill} variant="secondary" className="px-2.5 py-1">
+                    {skill}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground">No specific stack derived from missions.</span>
+              )}
             </div>
           </div>
 
@@ -74,11 +92,11 @@ export function CandidateModal({ candidate, onClose, onStart, isStarting }: Cand
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-0.5">•</span>
-                  System Design & Architecture
+                  {candidate.signals.missionsFirstTry > 10 ? "Fast Learner (High first-try rate)" : "Persistent Problem Solver"}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-0.5">•</span>
-                  API Performance Optimization
+                  Completion Rate: {Math.round((candidate.signals.missionsCompleted / 31) * 100)}%
                 </li>
               </ul>
             </div>
@@ -90,14 +108,18 @@ export function CandidateModal({ candidate, onClose, onStart, isStarting }: Cand
                 Areas to Improve
               </h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-500 mt-0.5">•</span>
-                  Advanced Data Structures
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-amber-500 mt-0.5">•</span>
-                  Microservices deployment
-                </li>
+                {candidate.missions.filter(m => !m.passed && m.attempts && m.attempts > 2).slice(0, 2).map((m, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-amber-500 mt-0.5">•</span>
+                    Struggles with {m.title}
+                  </li>
+                ))}
+                {candidate.missions.filter(m => !m.passed && m.attempts && m.attempts > 2).length === 0 && (
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-500 mt-0.5">•</span>
+                    Consistent performer across topics
+                  </li>
+                )}
               </ul>
             </div>
           </div>
@@ -108,13 +130,13 @@ export function CandidateModal({ candidate, onClose, onStart, isStarting }: Cand
               AI Recommendation
             </h4>
             <p className="text-sm leading-relaxed text-muted-foreground p-4 bg-muted/30 rounded-lg border border-border">
-              {candidate.name} demonstrates a solid grasp of core {candidate.preferred_role} concepts. Focus the upcoming interview on real-world system design tradeoffs to assess their senior potential.
+              {candidate.member.name} demonstrates a solid grasp of core {candidate.member.jobRole} concepts. Focus the upcoming interview on real-world system design tradeoffs to assess their senior potential.
             </p>
           </div>
         </CardContent>
         <CardFooter className="border-t border-border pt-4 pb-4 px-6 justify-end gap-3">
           <Button variant="outline" onClick={onClose} disabled={isStarting}>Cancel</Button>
-          <Button onClick={() => onStart(candidate.candidate_id)} disabled={isStarting} className="shadow-premium-sm">
+          <Button onClick={() => onStart(candidate.member.id)} disabled={isStarting} className="shadow-premium-sm">
             {isStarting ? "Starting..." : "Begin Interview"}
             {!isStarting && <Play className="ml-2 h-4 w-4" />}
           </Button>
