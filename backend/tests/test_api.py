@@ -3,23 +3,22 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from backend.main import app
 
+from backend.api.dependencies import get_ai_service
+from backend.services.ai.ai_service import AIService
+from backend.services.ai.engine import AIEngine
+
 client = TestClient(app)
 
-# We use an autouse fixture to patch _call_gemini on GeminiAdapter
-# so no tests accidentally hit the real API.
+# Explicitly inject MockProvider via test_mode=True to ensure ZERO external API calls.
 @pytest.fixture(autouse=True)
-def mock_gemini():
-    with patch("backend.services.ai.gemini_adapter.GeminiAdapter._call_gemini") as mock:
-        # Provide a default valid JSON response depending on the prompt
-        def side_effect(prompt):
-            if "feedback" in prompt.lower() and "score" in prompt.lower() and "follow_up" in prompt.lower():
-                return '{"feedback": "Good answer.", "score": 8, "follow_up_required": false, "confidence": "high"}'
-            elif "overall_score" in prompt.lower():
-                return '{"overall_score": 85, "strengths": ["a"], "weaknesses": ["b"], "improvement_topics": ["c"], "recommended_learning_path": "d", "curriculum_references": ["e"], "confidence_level": "high", "interview_summary": "Great"}'
-            else:
-                return '{"question_text": "What is React?"}'
-        mock.side_effect = side_effect
-        yield mock
+def isolate_ai_engine():
+    # Instantiate the engine in test_mode to bypass all real keys
+    mock_engine = AIEngine(test_mode=True)
+    mock_service = AIService(mock_engine)
+    
+    app.dependency_overrides[get_ai_service] = lambda: mock_service
+    yield
+    app.dependency_overrides.clear()
 
 def test_health_endpoint():
     response = client.get("/health")
@@ -80,7 +79,7 @@ def test_interview_flow():
     state_resp = client.get(f"/interview/{session_id}")
     assert state_resp.status_code == 200
     state_data = state_resp.json()
-    assert state_data["status"] == "in_progress"
+    assert state_data["status"] == "feedback_ready"
     assert state_data["current_question_number"] == 1
     assert len(state_data["questions_asked"]) == 1
 
@@ -101,6 +100,8 @@ def test_full_interview_flow():
         
         ans_req = {"answer_text": "This is a test answer."}
         ans_resp = client.post(f"/interview/{session_id}/answer", json=ans_req)
+        if ans_resp.status_code != 200:
+            print(f"ERROR: {ans_resp.json()}")
         assert ans_resp.status_code == 200
         
     state_resp = client.get(f"/interview/{session_id}")
@@ -108,12 +109,12 @@ def test_full_interview_flow():
     
     # Try getting next when completed (Invalid state transition)
     bad_next = client.post(f"/interview/{session_id}/next")
-    assert bad_next.status_code == 400
+    assert bad_next.status_code == 409
     assert "cannot fetch next question" in bad_next.json()["detail"].lower()
     
     # Try answering when completed (Invalid state transition)
     bad_ans = client.post(f"/interview/{session_id}/answer", json={"answer_text": "test"})
-    assert bad_ans.status_code == 400
+    assert bad_ans.status_code == 409
     
     # Get Final Feedback
     feedback = client.get(f"/interview/{session_id}/feedback")

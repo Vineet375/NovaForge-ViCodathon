@@ -9,6 +9,8 @@ from backend.services.ai.exceptions import (
     LLMFailureException,
     LLMTimeoutException,
     MissingAPIKeyException,
+    LLMRateLimitException,
+    LLMAuthException,
 )
 from backend.services.ai.llm_provider import LLMProvider
 from backend.utils.logger import logger
@@ -86,17 +88,25 @@ class GeminiAdapter(LLMProvider):
                 )
 
                 if code == 401:
-                    raise LLMFailureException("AI authentication failed. Check your GEMINI_API_KEY.")
+                    raise LLMAuthException("AI authentication failed. Check your GEMINI_API_KEY.")
                 elif code == 404:
                     raise LLMFailureException(
                         f"The configured Gemini model '{self.model_name}' is unavailable or "
                         "deprecated. Please update GEMINI_MODEL in your .env file."
                     )
                 elif code == 429:
-                    last_exception = LLMFailureException(
-                        "The AI service is busy. Please try again shortly."
-                    )
-                    continue
+                    # Google's RetryInfo is sometimes available in headers/details, but 
+                    # we use a safe default of 60 seconds if we cannot parse it easily.
+                    retry_after = 60
+                    # Check if 'retry-after' is in the message or details
+                    if "retry-after" in str(e).lower():
+                        import re
+                        match = re.search(r"retry-after\s*[:=]\s*(\d+)", str(e).lower())
+                        if match:
+                            retry_after = int(match.group(1))
+                    
+                    logger.warning(f"Gemini API Rate Limit hit. Retry after {retry_after}s.")
+                    raise LLMRateLimitException("The AI service is temporarily busy.", retry_after=retry_after)
                 else:
                     last_exception = LLMFailureException(
                         "The AI service encountered an error. Please try again."

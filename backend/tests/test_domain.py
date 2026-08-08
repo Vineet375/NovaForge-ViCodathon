@@ -43,12 +43,12 @@ def test_session_manager(sample_candidate, sample_curriculum):
     manager = SessionManager()
     session = manager.create_session(sample_candidate, sample_curriculum)
     
-    assert session.status == InterviewState.NOT_STARTED
+    assert session.status == InterviewState.INITIALIZING
     assert session.candidate_id == "c1"
     
     started = manager.start_session(session.session_id)
     assert started
-    assert session.status == InterviewState.IN_PROGRESS
+    assert session.status == InterviewState.INITIALIZING
     
     # Progress
     q = AskedQuestion(

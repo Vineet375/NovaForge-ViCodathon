@@ -4,10 +4,14 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 class InterviewState(str, Enum):
-    NOT_STARTED = "not_started"
-    IN_PROGRESS = "in_progress"
+    INITIALIZING = "initializing"
+    GENERATING = "generating"
+    QUESTION_READY = "question_ready"
+    EVALUATING = "evaluating"
+    FEEDBACK_READY = "feedback_ready"
+    WAITING_FOR_AI = "waiting_for_ai"
     COMPLETED = "completed"
-    CANCELLED = "cancelled"
+    FAILED = "failed"
 
 class QuestionDifficulty(str, Enum):
     EASY = "easy"
@@ -38,7 +42,7 @@ class AskedQuestion(BaseModel):
 class InterviewSession(BaseModel):
     session_id: str
     candidate_id: str
-    status: InterviewState = InterviewState.NOT_STARTED
+    status: InterviewState = InterviewState.INITIALIZING
     current_question_number: int = 0
     planned_topics: List[int] = Field(default_factory=list)
     current_curriculum_day: Optional[int] = None
@@ -47,3 +51,11 @@ class InterviewSession(BaseModel):
     questions_asked: List[AskedQuestion] = Field(default_factory=list)
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+    
+    # Milestone 16 Diagnostics & Resilience
+    created_time: datetime = Field(default_factory=datetime.now)
+    last_updated: datetime = Field(default_factory=datetime.now)
+    last_error: Optional[str] = None
+    retry_after: Optional[datetime] = None
+    retry_count: int = 0
+    ai_request_in_progress: bool = False

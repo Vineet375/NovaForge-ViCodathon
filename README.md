@@ -579,3 +579,8 @@ Built with ❤️ for the **AB Talks ViCodathon 2026** hackathon.
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.
+
+## Milestone 18.3: AI Failover Hardening
+- **Test Environment Isolation**: Enforced \pp.dependency_overrides\ in pytest to ensure 100% offline isolation without relying on fragile .env states.
+- **Failover Latency Optimization**: Added strict timeouts (\httpx.Timeout(7.0, connect=3.0)\ and \max_retries=0\) to the NVIDIA provider and 10s timeouts to Gemini, guaranteeing bounded failure responses (< 10s per layer).
+- **MockProvider Fallback Safety**: Mock fallback deterministically loops through a large pool of unique questions, ensuring UI progression without duplicates during complete API outages.

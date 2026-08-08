@@ -101,16 +101,9 @@ def test_response_parser_schema_validation():
         ResponseParser.parse_full_evaluation(raw)
 
 
-def test_gemini_adapter_missing_key(monkeypatch):
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    with pytest.raises(MissingAPIKeyException):
-        GeminiAdapter()
-
-
-def test_gemini_adapter_mock_response(monkeypatch):
-    monkeypatch.setenv("GEMINI_API_KEY", "dummy_key")
-    monkeypatch.setenv("GEMINI_MODEL", "gemini-test-model")
-    adapter = GeminiAdapter()
-    with patch.object(adapter, "_call_gemini", return_value='{"question_text": "MOCK"}'):
-        res = adapter.generate_question("test prompt")
-        assert "MOCK" in res
+def test_mock_provider_unique():
+    from backend.services.ai.providers.mock import MockProvider
+    provider = MockProvider()
+    q1 = provider.generate_question("p")
+    q2 = provider.generate_question("p")
+    assert q1 != q2

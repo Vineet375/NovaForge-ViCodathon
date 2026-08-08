@@ -37,8 +37,7 @@ export function useInterview() {
 
 export function useInterviewSession(sessionId: string) {
   const [session, setSession] = useState<InterviewSessionState | null>(null)
-  const [currentQuestion, setCurrentQuestion] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<FeedbackResponse | null>(null)
+  const [report, setReport] = useState<FeedbackResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +47,6 @@ export function useInterviewSession(sessionId: string) {
   
   // Guard against duplicate concurrent requests
   const requestInProgress = useRef(false)
-  // Track mount status for safe state updates after async calls
   const isMounted = useRef(true)
 
   useEffect(() => {
@@ -91,21 +89,10 @@ export function useInterviewSession(sessionId: string) {
       if (!isMounted.current) return
       setSession(res)
       
-      // Auto-restore current question if available
-      if (res.questions_asked && res.questions_asked.length > 0) {
-        const lastQ = res.questions_asked[res.questions_asked.length - 1]
-        if (!lastQ.answer_given) {
-          setCurrentQuestion(lastQ.question_text)
-        } else if (res.status !== "completed") {
-            // Need next question
-            setCurrentQuestion(null)
-        }
-      }
-      
       if (res.status === "completed") {
         try {
           const fb = await InterviewAPI.getFeedback(sessionId)
-          if (isMounted.current) setFeedback(fb)
+          if (isMounted.current) setReport(fb)
         } catch {
           // ignore feedback error temporarily
         }
@@ -136,10 +123,8 @@ export function useInterviewSession(sessionId: string) {
       setActionLoading(true)
       setError(null)
       setRetryAfter(null)
-      const res = await InterviewAPI.getNextQuestion(sessionId)
-      if (!isMounted.current) return
-      setCurrentQuestion(res.question_text)
-      await fetchSession() // update session state
+      await InterviewAPI.getNextQuestion(sessionId)
+      await fetchSession()
     } catch (err) {
       if (!isMounted.current) return
       handleApiError(err, "Failed to get next question")
@@ -156,22 +141,11 @@ export function useInterviewSession(sessionId: string) {
       setActionLoading(true)
       setError(null)
       setRetryAfter(null)
-      const res = await InterviewAPI.answerQuestion(sessionId, { answer_text: answer })
-      if (!isMounted.current) return
-      
-      await fetchSession() // update session state
-      toast.success("Answer submitted successfully")
-      
-      if (res.follow_up_question) {
-        setCurrentQuestion(res.follow_up_question)
-      } else {
-        setCurrentQuestion(null)
-      }
-      return res
+      await InterviewAPI.answerQuestion(sessionId, { answer_text: answer })
+      await fetchSession()
     } catch (err) {
       if (!isMounted.current) return
       handleApiError(err, "Failed to submit answer")
-      return null
     } finally {
       requestInProgress.current = false
       if (isMounted.current) setActionLoading(false)
@@ -180,8 +154,7 @@ export function useInterviewSession(sessionId: string) {
 
   return {
     session,
-    currentQuestion,
-    feedback,
+    report,
     loading,
     actionLoading,
     error,

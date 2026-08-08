@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import Depends
 
 from backend.services.ai.ai_service import AIService
-from backend.services.ai.gemini_adapter import GeminiAdapter
+from backend.services.ai.engine import AIEngine
 from backend.services.domain.session_manager import SessionManager
 from backend.services.repositories import CandidateRepository, CurriculumRepository
 
@@ -15,7 +15,7 @@ load_dotenv()
 _curriculum_repo = CurriculumRepository()
 _candidate_repo = CandidateRepository()
 _session_manager = SessionManager()
-_llm_provider = GeminiAdapter()
+_llm_provider = AIEngine()
 _ai_service = AIService(_llm_provider)
 
 

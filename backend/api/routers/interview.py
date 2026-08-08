@@ -108,15 +108,18 @@ def get_next_question(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    if session.status not in [InterviewState.INITIALIZING, InterviewState.ACTIVE, InterviewState.WAITING_FOR_AI]:
+    # Idempotency check
+    if session.status == InterviewState.QUESTION_READY:
+        if session.questions_asked and not session.questions_asked[-1].answer_given:
+            return NextQuestionResponse(question_text=session.questions_asked[-1].question_text)
+        else:
+            raise HTTPException(status_code=409, detail="State mismatch in QUESTION_READY")
+
+    if session.status not in [InterviewState.INITIALIZING, InterviewState.FEEDBACK_READY, InterviewState.WAITING_FOR_AI]:
         raise HTTPException(
-            status_code=400,
+            status_code=409,
             detail=f"Session is {session.status}, cannot fetch next question",
         )
-
-    # Idempotency check: if there is an unanswered question, return it instead of regenerating
-    if session.questions_asked and not session.questions_asked[-1].answer_given:
-        return NextQuestionResponse(question_text=session.questions_asked[-1].question_text)
 
     _check_rate_limit(session, response)
     _check_concurrency(session)
@@ -130,35 +133,16 @@ def get_next_question(
         difficulty=session.difficulty_level,
     )
 
+    session.status = InterviewState.GENERATING
     session.ai_request_in_progress = True
     session.last_error = None
     try:
         q_text = ai_service.generate_initial_question(
             session, candidate, curriculum, planned
         )
-        session.status = InterviewState.ACTIVE
+        session.status = InterviewState.QUESTION_READY
         session.retry_after = None
         session.retry_count = 0
-    except LLMRateLimitException as e:
-        # For Hackathon/Demo: Fallback to mock question to avoid blocking the user
-        mock_questions = [
-            "Can you describe a time when you had to optimize a piece of code for performance? What was the outcome?",
-            "How do you handle memory management and memory leaks in your primary language?",
-            "Describe the architecture of the most complex system you've built. What were the key trade-offs?",
-            "How do you ensure your code is secure against common vulnerabilities like SQL injection or XSS?",
-            "Explain the difference between concurrent and parallel execution. When would you use one over the other?",
-            "How do you approach designing a scalable RESTful API?",
-            "What strategies do you use for debugging a system crash in production?",
-            "Tell me about a time you had a technical disagreement with a team member. How was it resolved?",
-            "Describe how you would implement a distributed caching strategy for a high-traffic web application.",
-            "What is your approach to writing testable code? Give examples of unit vs integration testing."
-        ]
-        q_idx = min(session.current_question_number, len(mock_questions)) - 1
-        q_text = mock_questions[max(0, q_idx) % len(mock_questions)]
-        session.status = InterviewState.ACTIVE
-        session.retry_after = None
-        session.retry_count = 0
-        session.last_error = None
     except (HTTPException, AIEngineException) as e:
         session.status = InterviewState.WAITING_FOR_AI
         session.last_error = str(e)
@@ -188,31 +172,32 @@ def answer_question(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    if session.status not in [InterviewState.ACTIVE, InterviewState.WAITING_FOR_AI]:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Session is {session.status}, cannot submit answer",
-        )
-
     if not session.questions_asked:
         raise HTTPException(status_code=400, detail="No question has been asked yet")
-
+        
     current_question = session.questions_asked[-1]
-    
-    # Idempotency check: if the question already has an answer/feedback, just return it
-    if current_question.answer_given and current_question.feedback:
-        follow_up_text = None
-        # Check if the next question is actually a follow-up we already generated
-        if len(session.questions_asked) > session.current_question_number:
-            follow_up_text = session.questions_asked[-1].question_text
-        return AnswerResponse(
-            feedback=current_question.feedback,
-            follow_up_question=follow_up_text,
+
+    # Idempotency check
+    if session.status == InterviewState.FEEDBACK_READY:
+        if current_question.answer_given and current_question.feedback:
+            follow_up_text = None
+            if len(session.questions_asked) > session.current_question_number:
+                follow_up_text = session.questions_asked[-1].question_text
+            return AnswerResponse(
+                feedback=current_question.feedback,
+                follow_up_question=follow_up_text,
+            )
+
+    if session.status not in [InterviewState.QUESTION_READY, InterviewState.WAITING_FOR_AI]:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Session is {session.status}, cannot submit answer",
         )
 
     _check_rate_limit(session, response)
     _check_concurrency(session)
     
+    session.status = InterviewState.EVALUATING
     session.ai_request_in_progress = True
     session.last_error = None
     try:
@@ -237,21 +222,9 @@ def answer_question(
                 session_manager.update_progress(session_id, follow_up_q)
                 follow_up_text = follow_up_q.question_text
                 
-        session.status = InterviewState.ACTIVE
+        session.status = InterviewState.FEEDBACK_READY
         session.retry_after = None
         session.retry_count = 0
-    except LLMRateLimitException as e:
-        # For Hackathon/Demo: Fallback to mock evaluation to avoid blocking the user
-        current_question.answer_given = request.answer_text
-        current_question.feedback = "This is a solid answer! You covered the core concepts well, though you could have added a few more specific examples."
-        current_question.score = 7
-        current_question.confidence = "medium"
-        current_question.follow_up_required = False
-        follow_up_text = None
-        session.status = InterviewState.ACTIVE
-        session.retry_after = None
-        session.retry_count = 0
-        session.last_error = None
     except (HTTPException, AIEngineException) as e:
         session.status = InterviewState.WAITING_FOR_AI
         session.last_error = str(e)

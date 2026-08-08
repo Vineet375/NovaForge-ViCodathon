@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime
 from pydantic import BaseModel
 from backend.models.interview import QuestionDifficulty, InterviewState, AskedQuestion
 
@@ -31,3 +32,12 @@ class InterviewSessionState(BaseModel):
     status: InterviewState
     current_question_number: int
     questions_asked: List[AskedQuestion]
+
+class ActiveSessionResponse(BaseModel):
+    session_id: str
+    candidate_id: str
+    candidate_name: str
+    status: InterviewState
+    current_question_number: int
+    created_time: datetime
+    last_updated: datetime

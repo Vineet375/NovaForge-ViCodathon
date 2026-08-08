@@ -18,7 +18,14 @@ class SessionManager:
         
         # Check for active session
         for session in self._sessions.values():
-            if session.candidate_id == candidate.member.id and session.status in [InterviewState.NOT_STARTED, InterviewState.IN_PROGRESS]:
+            if session.candidate_id == candidate.member.id and session.status in [
+                InterviewState.INITIALIZING, 
+                InterviewState.GENERATING,
+                InterviewState.QUESTION_READY,
+                InterviewState.EVALUATING,
+                InterviewState.FEEDBACK_READY,
+                InterviewState.WAITING_FOR_AI
+            ]:
                 logger.info(f"Returning existing active session for candidate {candidate.member.id}")
                 return session
                 
@@ -36,7 +43,7 @@ class SessionManager:
         session = InterviewSession(
             session_id=session_id,
             candidate_id=candidate.member.id,
-            status=InterviewState.NOT_STARTED,
+            status=InterviewState.INITIALIZING,
             difficulty_level=difficulty,
             planned_topics=topics,
             current_curriculum_day=start_day
@@ -51,22 +58,36 @@ class SessionManager:
         return self._sessions.get(session_id)
         
     def start_session(self, session_id: str) -> bool:
-        """Mark a session as in progress."""
+        """Mark a session as initializing."""
         session = self.get_session(session_id)
-        if session and session.status == InterviewState.NOT_STARTED:
-            session.status = InterviewState.IN_PROGRESS
-            session.start_time = datetime.now(timezone.utc)
+        if session and session.status == InterviewState.INITIALIZING:
+            session.status = InterviewState.INITIALIZING
+            if not session.start_time:
+                session.start_time = datetime.now(timezone.utc)
+            session.last_updated = datetime.now()
             return True
         return False
+        
+    def get_active_sessions(self) -> list[InterviewSession]:
+        """Return all active, initializing, or waiting sessions."""
+        active_states = {
+            InterviewState.INITIALIZING, 
+            InterviewState.GENERATING,
+            InterviewState.QUESTION_READY,
+            InterviewState.EVALUATING,
+            InterviewState.FEEDBACK_READY,
+            InterviewState.WAITING_FOR_AI
+        }
+        return [s for s in self._sessions.values() if s.status in active_states]
         
     def update_progress(self, session_id: str, asked_question: AskedQuestion) -> Optional[InterviewSession]:
         """Update session progress with a new question and detect completion."""
         session = self.get_session(session_id)
-        if not session or session.status != InterviewState.IN_PROGRESS:
+        if not session or session.status == InterviewState.COMPLETED:
             return None
             
         session.questions_asked.append(asked_question)
-        session.current_question_number += 1
+        session.current_question_number = len(session.questions_asked)
         
         # Advance topic
         if session.planned_topics:
@@ -78,9 +99,10 @@ class SessionManager:
     def complete_session(self, session_id: str) -> bool:
         """Mark a session as completed."""
         session = self.get_session(session_id)
-        if session and session.status == InterviewState.IN_PROGRESS:
+        if session and session.status != InterviewState.COMPLETED:
             session.status = InterviewState.COMPLETED
             session.end_time = datetime.now(timezone.utc)
+            session.last_updated = datetime.now()
             logger.info(f"Interview session {session_id} completed.")
             return True
         return False

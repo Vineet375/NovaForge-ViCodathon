@@ -2,6 +2,18 @@ class AIEngineException(Exception):
     """Base exception for AI Engine errors."""
     pass
 
+class LLMAuthException(AIEngineException):
+    """Raised when the AI provider authentication fails."""
+    pass
+
+
+class LLMRateLimitException(AIEngineException):
+    """Raised when the AI provider rate limit is exceeded."""
+    def __init__(self, message: str = "AI rate limit exceeded.", retry_after: int = 60):
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
 class LLMFailureException(AIEngineException):
     """Raised when the LLM provider API fails."""
     pass

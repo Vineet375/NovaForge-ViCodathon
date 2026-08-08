@@ -53,6 +53,16 @@ export interface InterviewSessionState {
   questions_asked: AskedQuestion[]
 }
 
+export interface ActiveSessionResponse {
+  session_id: string
+  candidate_id: string
+  candidate_name: string
+  status: string
+  current_question_number: number
+  created_time: string
+  last_updated: string
+}
+
 export const InterviewAPI = {
   start: (data: StartInterviewRequest) => 
     fetchApi<StartInterviewResponse>("/interview/start", {
@@ -73,6 +83,9 @@ export const InterviewAPI = {
     
   getSession: (sessionId: string) =>
     fetchApi<InterviewSessionState>(`/interview/${sessionId}`),
+    
+  getActiveSessions: () =>
+    fetchApi<ActiveSessionResponse[]>("/interview/active"),
     
   getFeedback: (sessionId: string) =>
     fetchApi<FeedbackResponse>(`/interview/${sessionId}/feedback`)
