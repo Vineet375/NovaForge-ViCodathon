@@ -26,7 +26,7 @@ export function CurriculumProgress() {
 
   // Calculate mock progress since the backend doesn't store per-user progress yet
   const modules = curriculum.days.map((day, index) => ({
-    id: `m${day.day_number}`,
+    id: `m${day.day}`,
     title: day.title,
     progress: index === 0 ? 100 : index === 1 ? 65 : 0,
     status: index === 0 ? "completed" : index === 1 ? "in-progress" : "not-started"
@@ -90,4 +90,3 @@ export function CurriculumProgress() {
     </Card>
   )
 }
-
