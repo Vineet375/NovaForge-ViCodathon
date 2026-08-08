@@ -1079,3 +1079,13 @@ Full production stabilization pass. No new features. Every change is a cleanup, 
 - No authentication (demo/hackathon scope).
 - Static JSON data files (no admin UI).
 - Model availability tied to Google's API lifecycle.
+A p p e n d i n g   M i l e s t o n e   1 4   t o   P R O M P T S . m d  
+  
+ # # #   M i l e s t o n e   1 4   &   1 5 :   R e l e a s e   C a n d i d a t e   H a r d e n i n g   &   U I   P o l i s h  
+ 1 .   I m p l e m e n t e d   r o b u s t   J S O N   p a r s i n g   p i p e l i n e   w i t h   9 - s t e p   r e c o v e r y   ( s t r i p p i n g   m a r k d o w n ,   i s o l a t i n g   b r a c k e t s ) .  
+ 2 .   A d d e d   s t r i c t   s c h e m a   v a l i d a t i o n   f o r   L L M   r e s p o n s e s .  
+ 3 .   I m p l e m e n t e d   a   o n e - t i m e   L L M   r e t r y   m e c h a n i s m   f o r   p a r s i n g   f a i l u r e s .  
+ 4 .   A d d e d   p o l i s h e d   s k e l e t o n   l o a d i n g   s t a t e s   a c r o s s   t h e   f r o n t e n d   ( D a s h b o a r d ,   C u r r i c u l u m ,   I n t e r v i e w ) .  
+ 5 .   S a n i t i z e d   e r r o r   m e s s a g e s   t o   a v o i d   l e a k i n g   J S O N D e c o d e E r r o r s   t o   t h e   U I .  
+ 6 .   I m p r o v e d   a c c e s s i b i l i t y   w i t h   a u t o - f o c u s i n g   a n s w e r   b o x   i n   i n t e r v i e w   s e s s i o n .  
+ 

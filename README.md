@@ -249,9 +249,16 @@ AIService (facade)
             Raises InvalidResponseException on malformed output
 ```
 
----
+### Robust JSON Parser & AI Resilience
+The AI Service implements a 9-step resilient parsing pipeline to ensure the system never crashes due to LLM hallucinations:
+1. Attempt raw JSON parsing.
+2. Strip markdown fences and retry.
+3. Use a custom bracket-counting algorithm to isolate the first valid JSON object, ignoring any conversational filler.
+4. Validate strict schemas for questions, evaluations, and reports.
+5. If parsing fails, the `AIService` automatically intercepts the exception, injects a strict formatting rule into the prompt, and retries the Gemini API once.
+6. The frontend maps any remaining errors to user-friendly messages without exposing stack traces.
 
-## Backend Architecture
+## 🏗 Backend Architecture
 
 The backend is built on a strict layered architecture. Each layer has one responsibility and depends only on layers below it.
 
