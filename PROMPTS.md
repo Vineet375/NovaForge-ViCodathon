@@ -946,3 +946,30 @@ pm run build\ executed 4 times iteratively and cleared all TS compilation warnin
  * * A I   O u t p u t   S u m m a r y * * :   R e v i e w e d   A c t i v i t y T i m e l i n e   a n d   a d d e d   a   v i s u a l l y   c o n s i s t e n t   e m p t y   s t a t e   h a n d l i n g   f o r   w h e n   t h e   c a n d i d a t e   a c t i v i t y   f e e d   h a s   0   i t e m s . 
  * * G i t   C o m m i t   M e s s a g e * * :   f e a t :   a d d   e m p t y   s t a t e   t o   A c t i v i t y T i m e l i n e  
  
+
+## Commit: Gemini model configuration
+- Added GEMINI_MODEL to .env and .env.example
+- Configured app to use gemini-3.5-flash for compatibility
+
+
+## Commit: GeminiAdapter hardening
+- Added domain exceptions (AIEngineException) mapping.
+- Configured Gemini API to return structured JSON and updated max_output_tokens.
+- Added error handling and retry logic for transient API failures.
+
+
+## Commit: Global exception handler
+- Added global exception handler in main.py for AIEngineException.
+- Modified endpoints to bubble up AI exceptions for proper JSON responses.
+- Removed dead code in interview.py.
+
+
+## Commit: Resume interview feature
+- Implemented localStorage tracking for active_session_id in frontend.
+- Added conditional Resume Interview button logic.
+- Handled 404 recovery to clear local session and gracefully redirect.
+
+
+## Commit: Final cleanup and documentation updates
+- Removed unused variables from interview.py.
+- Updated README.md to document Milestone 12 changes and environment variables.
