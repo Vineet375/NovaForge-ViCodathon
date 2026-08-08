@@ -1,3 +1,4 @@
+"use client"
 import { useState, useCallback } from "react"
 import { InterviewAPI, StartInterviewRequest, AnswerRequest, InterviewSessionState, ApiError } from "@/lib/api"
 import { useRouter } from "next/navigation"
@@ -122,3 +123,4 @@ export function useInterviewSession(sessionId: string) {
     answerQuestion
   }
 }
+

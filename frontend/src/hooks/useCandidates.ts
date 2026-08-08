@@ -1,3 +1,4 @@
+"use client"
 import { useState, useEffect, useCallback } from "react"
 import { CandidateAPI, Candidate, ApiError } from "@/lib/api"
 
@@ -59,3 +60,4 @@ export function useCandidate(id: string | null) {
 
   return { candidate, loading, error, refetch: fetchCandidate }
 }
+

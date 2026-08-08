@@ -1,38 +1,37 @@
+"use client"
 import * as React from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Activity, Code, MessageSquare, CheckCircle } from "lucide-react"
-
-const activities = [
-  {
-    id: "a1",
-    title: "Completed System Design Mock",
-    description: "Scored 85% on distributed systems questions.",
-    time: "2 hours ago",
-    icon: CheckCircle,
-    color: "text-green-500",
-    bg: "bg-green-500/10"
-  },
-  {
-    id: "a2",
-    title: "Generated New Feedback",
-    description: "AI identified 3 areas for improvement in React state management.",
-    time: "5 hours ago",
-    icon: MessageSquare,
-    color: "text-blue-500",
-    bg: "bg-blue-500/10"
-  },
-  {
-    id: "a3",
-    title: "Started Algorithm Practice",
-    description: "Focused on dynamic programming patterns.",
-    time: "Yesterday",
-    icon: Code,
-    color: "text-amber-500",
-    bg: "bg-amber-500/10"
-  }
-]
+import { Activity, Code, MessageSquare, CheckCircle, Info, AlertTriangle, Loader2 } from "lucide-react"
+import { useDashboard } from "@/hooks/useDashboard"
 
 export function ActivityTimeline() {
+  const { data, loading, error } = useDashboard()
+
+  if (loading) {
+    return (
+      <Card className="shadow-premium h-[400px] flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </Card>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <Card className="shadow-premium h-[400px] flex items-center justify-center">
+        <p className="text-sm text-red-500">{error || "Failed to load activity"}</p>
+      </Card>
+    )
+  }
+
+  const getIconAndColors = (type: string) => {
+    switch(type) {
+      case "success": return { icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10" }
+      case "info": return { icon: MessageSquare, color: "text-blue-500", bg: "bg-blue-500/10" }
+      case "warning": return { icon: Code, color: "text-amber-500", bg: "bg-amber-500/10" }
+      default: return { icon: Info, color: "text-primary", bg: "bg-primary/10" }
+    }
+  }
+
   return (
     <Card className="shadow-premium">
       <CardHeader className="pb-4">
@@ -43,13 +42,13 @@ export function ActivityTimeline() {
       </CardHeader>
       <CardContent>
         <div className="relative space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-          {activities.map((activity, index) => {
-            const Icon = activity.icon
+          {data.activities.map((activity, index) => {
+            const { icon: Icon, color, bg } = getIconAndColors(activity.type)
             return (
               <div key={activity.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
                 <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-background shadow-sm shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.bg}`}>
-                    <Icon className={`h-4 w-4 ${activity.color}`} />
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bg}`}>
+                    <Icon className={`h-4 w-4 ${color}`} />
                   </div>
                 </div>
                 
@@ -68,3 +67,4 @@ export function ActivityTimeline() {
     </Card>
   )
 }
+

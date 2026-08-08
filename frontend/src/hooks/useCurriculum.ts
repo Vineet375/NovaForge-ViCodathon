@@ -1,3 +1,4 @@
+"use client"
 import { useState, useEffect, useCallback } from "react"
 import { CurriculumAPI, Curriculum, ApiError } from "@/lib/api"
 
@@ -29,3 +30,4 @@ export function useCurriculum() {
 
   return { curriculum, loading, error, refetch: fetchCurriculum }
 }
+

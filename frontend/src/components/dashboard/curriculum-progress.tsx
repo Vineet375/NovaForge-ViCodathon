@@ -1,36 +1,37 @@
+"use client"
 import * as React from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, CheckCircle2 } from "lucide-react"
-
-const modules = [
-  {
-    id: "m1",
-    title: "System Design Fundamentals",
-    progress: 100,
-    status: "completed"
-  },
-  {
-    id: "m2",
-    title: "Advanced React Patterns",
-    progress: 65,
-    status: "in-progress"
-  },
-  {
-    id: "m3",
-    title: "Data Structures & Algorithms",
-    progress: 0,
-    status: "not-started"
-  },
-  {
-    id: "m4",
-    title: "Behavioral Interviews",
-    progress: 0,
-    status: "not-started"
-  }
-]
+import { BookOpen, CheckCircle2, Loader2 } from "lucide-react"
+import { useCurriculum } from "@/hooks/useCurriculum"
 
 export function CurriculumProgress() {
+  const { curriculum, loading, error } = useCurriculum()
+  
+  if (loading) {
+    return (
+      <Card className="shadow-premium h-full min-h-[300px] flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </Card>
+    )
+  }
+
+  if (error || !curriculum) {
+    return (
+      <Card className="shadow-premium h-full min-h-[300px] flex items-center justify-center">
+        <p className="text-sm text-red-500">{error || "Failed to load curriculum"}</p>
+      </Card>
+    )
+  }
+
+  // Calculate mock progress since the backend doesn't store per-user progress yet
+  const modules = curriculum.days.map((day, index) => ({
+    id: `m${day.day_number}`,
+    title: day.title,
+    progress: index === 0 ? 100 : index === 1 ? 65 : 0,
+    status: index === 0 ? "completed" : index === 1 ? "in-progress" : "not-started"
+  }))
+
   const completed = modules.filter(m => m.progress === 100).length
   const total = modules.length
   const overallProgress = Math.round((modules.reduce((acc, m) => acc + m.progress, 0)) / total)
@@ -73,7 +74,7 @@ export function CurriculumProgress() {
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className={`text-sm font-medium truncate ${mod.progress === 100 ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
-                  {mod.title}
+                  Day {index + 1}: {mod.title}
                 </h4>
                 {mod.progress > 0 && mod.progress < 100 && (
                   <div className="flex items-center gap-3 mt-2">
@@ -89,3 +90,4 @@ export function CurriculumProgress() {
     </Card>
   )
 }
+

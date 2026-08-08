@@ -1,3 +1,4 @@
+"use client"
 import { useState, useEffect, useCallback } from "react"
 import { DashboardAPI, DashboardData, ApiError } from "@/lib/api"
 
@@ -29,3 +30,4 @@ export function useDashboard() {
 
   return { data, loading, error, refetch: fetchDashboard }
 }
+
