@@ -1,7 +1,8 @@
 "use client"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { InterviewAPI, StartInterviewRequest, AnswerRequest, InterviewSessionState, ApiError } from "@/lib/api"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export function useInterview() {
   const [loading, setLoading] = useState(false)
@@ -13,13 +14,16 @@ export function useInterview() {
       setLoading(true)
       setError(null)
       const res = await InterviewAPI.start({ candidate_id: candidateId })
+      toast.success("Interview session started")
       router.push(`/interview/${res.session_id}`)
       return res
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message)
+        toast.error(`Failed to start: ${err.message}`)
       } else {
         setError("Failed to start interview")
+        toast.error("Failed to start interview")
       }
       return null
     } finally {
@@ -60,10 +64,15 @@ export function useInterviewSession(sessionId: string) {
       } else {
         setError("Failed to fetch session")
       }
+      toast.error("Failed to load interview session")
     } finally {
       setLoading(false)
     }
   }, [sessionId])
+
+  useEffect(() => {
+    fetchSession()
+  }, [fetchSession])
 
   const nextQuestion = useCallback(async () => {
     if (!sessionId) return
@@ -76,8 +85,10 @@ export function useInterviewSession(sessionId: string) {
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message)
+        toast.error(`Failed to load question: ${err.message}`)
       } else {
         setError("Failed to get next question")
+        toast.error("Failed to load question")
       }
     } finally {
       setActionLoading(false)
@@ -92,6 +103,8 @@ export function useInterviewSession(sessionId: string) {
       const res = await InterviewAPI.answerQuestion(sessionId, { answer_text: answer })
       await fetchSession() // update session state
       
+      toast.success("Answer submitted successfully")
+      
       // If there's a follow-up question, we set it as the current question
       if (res.follow_up_question) {
         setCurrentQuestion(res.follow_up_question)
@@ -102,8 +115,10 @@ export function useInterviewSession(sessionId: string) {
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message)
+        toast.error(`Failed to submit answer: ${err.message}`)
       } else {
         setError("Failed to submit answer")
+        toast.error("Failed to submit answer")
       }
       return null
     } finally {
@@ -123,4 +138,3 @@ export function useInterviewSession(sessionId: string) {
     answerQuestion
   }
 }
-

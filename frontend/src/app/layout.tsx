@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "sonner"
 
 export const metadata: Metadata = {
   title: "NovaForge",
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           disableTransitionOnChange={false}
         >
           {children}
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>
