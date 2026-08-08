@@ -163,11 +163,13 @@ export default function InterviewPage() {
               </div>
             </div>
             <div className="w-full md:w-64 space-y-2">
-              <div className="flex justify-between text-xs font-medium">
-                <span>Progress</span>
-                <span>{progress}%</span>
+              <div className="flex items-center gap-4 text-sm font-medium w-64">
+                <span className="text-muted-foreground whitespace-nowrap">Progress</span>
+                <div className="flex-1">
+                  <Progress value={Math.max(0, ((session.current_question_number - 1) / 8) * 100)} className="h-2" />
+                </div>
+                <span>{Math.max(0, Math.round(((session.current_question_number - 1) / 8) * 100))}%</span>
               </div>
-              <Progress value={progress} className="h-2" />
             </div>
           </div>
         </Section>
