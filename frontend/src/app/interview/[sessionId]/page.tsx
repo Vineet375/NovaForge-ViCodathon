@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, ArrowRight, CheckCircle2, MessageSquare, Play, AlertCircle } from "lucide-react"
+import { Loader2, ArrowRight, CheckCircle2, MessageSquare, Play, AlertCircle, Clock, Brain } from "lucide-react"
 import { TypingIndicator } from "@/components/ui/typing-indicator"
 import { InterviewReport } from "@/components/interview/interview-report"
 import { AskedQuestion } from "@/lib/api"
@@ -26,13 +26,28 @@ export default function InterviewPage() {
     loading,
     actionLoading,
     error,
+    retryAfter,
     nextQuestion,
     answerQuestion
   } = useInterviewSession(sessionId)
 
   const [answer, setAnswer] = React.useState("")
   const [currentFeedback, setCurrentFeedback] = React.useState<string | null>(null)
+  const [countdown, setCountdown] = React.useState<number | null>(null)
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+
+  React.useEffect(() => {
+    if (retryAfter) {
+      setCountdown(retryAfter)
+    }
+  }, [retryAfter])
+
+  React.useEffect(() => {
+    if (countdown !== null && countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [countdown])
 
   // Auto-focus textarea when a new question is loaded and no feedback is shown
   React.useEffect(() => {
@@ -41,12 +56,12 @@ export default function InterviewPage() {
     }
   }, [currentQuestion, currentFeedback])
 
-  // Auto-fetch first question if none exists and session is active
+  // Auto-fetch first question if none exists and session is initializing
   React.useEffect(() => {
-    if (session?.status === "in_progress" && !currentQuestion && session.questions_asked.length === 0) {
+    if (session?.status === "initializing" && !currentQuestion && session.questions_asked.length === 0) {
       nextQuestion()
     }
-  }, [session, currentQuestion, nextQuestion])
+  }, [session?.status, session?.questions_asked.length, currentQuestion, nextQuestion])
 
   const handleSubmit = async () => {
     if (!answer.trim() || actionLoading) return
@@ -175,7 +190,51 @@ export default function InterviewPage() {
                 <div className="h-1.5 w-full bg-gradient-to-r from-primary to-blue-500" />
                 <CardHeader>
                   <CardTitle className="text-lg leading-relaxed">
-                    {currentQuestion || (session.questions_asked.length > 0 && !session.questions_asked[session.questions_asked.length - 1].answer_given ? session.questions_asked[session.questions_asked.length - 1].question_text : "Loading next question...")}
+                    {session.status === "waiting_for_ai" || (countdown !== null && countdown > 0) ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+                        <div className="relative flex h-16 w-16 items-center justify-center">
+                          <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500/20 animate-ping"></span>
+                          <Clock className="h-8 w-8 text-amber-500 relative z-10" />
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-xl font-semibold tracking-tight">AI is currently processing requests.</h3>
+                          <p className="text-sm text-muted-foreground font-medium">Retry available in:</p>
+                          <div className="text-5xl font-mono tracking-wider text-amber-500 font-bold py-2">
+                            00:{countdown?.toString().padStart(2, '0') || '60'}
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={handleNext} 
+                          disabled={countdown !== null && countdown > 0} 
+                          className="mt-4 w-40 shadow-premium-sm"
+                          variant="outline"
+                        >
+                          {countdown !== null && countdown > 0 ? "Wait..." : "Retry"}
+                        </Button>
+                      </div>
+                    ) : (!currentQuestion) ? (
+                      <div className="flex flex-col items-center justify-center py-16 space-y-8 animate-in fade-in duration-500">
+                        <div className="flex items-center gap-4">
+                          <div className="relative flex h-12 w-12">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-20 duration-1000"></span>
+                            <span className="relative inline-flex rounded-full h-12 w-12 bg-primary/10 flex items-center justify-center border border-primary/20">
+                              <Brain className="h-6 w-6 text-primary animate-pulse" />
+                            </span>
+                          </div>
+                          <h3 className="text-xl font-medium tracking-tight">NovaForge AI is generating your interview...</h3>
+                        </div>
+                        <div className="w-full max-w-md space-y-3">
+                          <Progress value={undefined} className="h-1.5 w-full bg-muted overflow-hidden relative">
+                            <div className="absolute inset-0 bg-primary/50 animate-[indeterminate_2s_infinite_linear]" style={{width: '50%', transformOrigin: 'left'}} />
+                          </Progress>
+                          <p className="text-xs text-center text-muted-foreground animate-pulse">Analyzing your curriculum profile and framing the next technical question.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        {currentQuestion}
+                      </div>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -183,24 +242,24 @@ export default function InterviewPage() {
                     <label htmlFor="answer" className="text-sm font-medium text-foreground">
                       Your Answer
                     </label>
-                    <textarea
-                      id="answer"
-                      value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
-                      disabled={actionLoading || !!currentFeedback}
-                      placeholder="Type your answer here. Be as detailed as possible..."
-                      className="w-full min-h-[200px] p-4 rounded-xl border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed resize-y"
-                      aria-label="Answer textarea"
-                      ref={textareaRef}
-                    />
+                      <textarea
+                        id="answer"
+                        value={answer}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        disabled={actionLoading || !!currentFeedback || session.status === "waiting_for_ai" || !currentQuestion}
+                        placeholder={!currentQuestion ? "Waiting for question..." : "Type your answer here. Be as detailed as possible..."}
+                        className="w-full min-h-[200px] p-4 rounded-xl border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 disabled:cursor-not-allowed resize-y transition-all"
+                        aria-label="Answer textarea"
+                        ref={textareaRef}
+                      />
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end pt-2">
                   {!currentFeedback ? (
                     <Button 
                       onClick={handleSubmit} 
-                      disabled={!answer.trim() || actionLoading}
-                      className="shadow-premium-sm"
+                      disabled={!answer.trim() || actionLoading || (countdown !== null && countdown > 0) || !currentQuestion}
+                      className="shadow-premium-sm transition-all duration-300"
                     >
                       {actionLoading ? (
                         <>
@@ -217,9 +276,9 @@ export default function InterviewPage() {
                   ) : (
                     <Button 
                       onClick={handleNext} 
-                      disabled={actionLoading}
+                      disabled={actionLoading || (countdown !== null && countdown > 0)}
                       variant="secondary"
-                      className="shadow-premium-sm"
+                      className="shadow-premium-sm transition-all duration-300"
                     >
                       {actionLoading ? (
                         <>
