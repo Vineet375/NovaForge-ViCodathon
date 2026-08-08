@@ -1,13 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from backend.services.ai.exceptions import AIEngineException
 
 app = FastAPI(
     title="NovaForge AI Interview Agent",
-    description="Backend API for NovaForge AI Interview Agent",
+    description="Backend API for the NovaForge AI-powered technical interview system.",
     version="1.0.0"
 )
 
-# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,24 +18,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from backend.api.routers import health, candidate, curriculum, interview, dashboard
-
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from backend.services.ai.exceptions import AIEngineException
 
 @app.exception_handler(AIEngineException)
 async def ai_engine_exception_handler(request: Request, exc: AIEngineException):
+    """Translate all AI engine exceptions into clean JSON error responses."""
     return JSONResponse(
         status_code=500,
         content={"detail": str(exc)},
     )
+
+
+from backend.api.routers import health, candidate, curriculum, interview, dashboard  # noqa: E402
 
 app.include_router(health.router)
 app.include_router(candidate.router)
 app.include_router(curriculum.router)
 app.include_router(interview.router)
 app.include_router(dashboard.router)
+
 
 @app.get("/")
 def read_root():
