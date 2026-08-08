@@ -25,6 +25,7 @@ export function useCandidates() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCandidates()
   }, [fetchCandidates])
 
@@ -55,6 +56,7 @@ export function useCandidate(id: string | null) {
   }, [id])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCandidate()
   }, [fetchCandidate])
 

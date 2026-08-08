@@ -1,7 +1,7 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
 
 export class ApiError extends Error {
-  constructor(public status: number, public message: string, public data?: any) {
+  constructor(public status: number, public message: string, public data?: unknown) {
     super(message)
     this.name = "ApiError"
   }
@@ -22,7 +22,7 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
     const text = await response.text()
     try {
       data = text ? JSON.parse(text) : {}
-    } catch (e) {
+    } catch {
       throw new ApiError(response.status, "Invalid JSON response")
     }
 

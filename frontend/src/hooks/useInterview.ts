@@ -1,6 +1,6 @@
 "use client"
 import { useState, useCallback, useEffect } from "react"
-import { InterviewAPI, StartInterviewRequest, AnswerRequest, InterviewSessionState, ApiError } from "@/lib/api"
+import { InterviewAPI, InterviewSessionState, ApiError, FeedbackResponse } from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -37,7 +37,7 @@ export function useInterview() {
 export function useInterviewSession(sessionId: string) {
   const [session, setSession] = useState<InterviewSessionState | null>(null)
   const [currentQuestion, setCurrentQuestion] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<any>(null)
+  const [feedback, setFeedback] = useState<FeedbackResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,7 +54,7 @@ export function useInterviewSession(sessionId: string) {
         try {
           const fb = await InterviewAPI.getFeedback(sessionId)
           setFeedback(fb)
-        } catch (e) {
+        } catch {
           // ignore feedback error temporarily
         }
       }
@@ -71,6 +71,7 @@ export function useInterviewSession(sessionId: string) {
   }, [sessionId])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSession()
   }, [fetchSession])
 

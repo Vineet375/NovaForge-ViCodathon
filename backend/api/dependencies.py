@@ -14,9 +14,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-# For this milestone, we use the GeminiAdapter which is mocked out internally to not make real calls
-if not os.getenv("GEMINI_API_KEY"):
-    os.environ["GEMINI_API_KEY"] = "mock_key_for_milestone_5"
+# Use real environment variables for the Gemini Adapter
 _llm_provider = GeminiAdapter()
 _ai_service = AIService(_llm_provider)
 

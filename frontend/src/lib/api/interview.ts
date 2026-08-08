@@ -24,11 +24,33 @@ export interface AnswerResponse {
   follow_up_question: string | null
 }
 
+export interface AskedQuestion {
+  question_text: string
+  answer_given?: string
+  feedback?: string
+  score?: number
+  confidence?: string
+  follow_up_required?: boolean
+  planned_question?: unknown
+}
+
+export interface FeedbackResponse {
+  overall_score: number
+  strengths: string[]
+  weaknesses: string[]
+  improvement_topics: string[]
+  recommended_learning_path: string
+  curriculum_references: string[]
+  confidence_level: string
+  interview_summary: string
+  [key: string]: unknown
+}
+
 export interface InterviewSessionState {
   session_id: string
   status: string
   current_question_number: number
-  questions_asked: any[]
+  questions_asked: AskedQuestion[]
 }
 
 export const InterviewAPI = {
@@ -53,5 +75,5 @@ export const InterviewAPI = {
     fetchApi<InterviewSessionState>(`/interview/${sessionId}`),
     
   getFeedback: (sessionId: string) =>
-    fetchApi<any>(`/interview/${sessionId}/feedback`)
+    fetchApi<FeedbackResponse>(`/interview/${sessionId}/feedback`)
 }
