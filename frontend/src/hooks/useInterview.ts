@@ -67,8 +67,11 @@ export function useInterviewSession(sessionId: string) {
       if (err.status === 429 && err.headers) {
         const retryHeader = err.headers.get("Retry-After")
         if (retryHeader) {
-          setRetryAfter(parseInt(retryHeader, 10))
-          return // Prevent triggering hard error UI
+          const parsed = parseInt(retryHeader, 10)
+          if (!isNaN(parsed)) {
+            setRetryAfter(parsed)
+            return // Prevent triggering hard error UI
+          }
         }
       }
       if (isMounted.current) setError(err.message)
