@@ -22,14 +22,43 @@ app.add_middleware(
 @app.exception_handler(AIEngineException)
 async def ai_engine_exception_handler(request: Request, exc: AIEngineException):
     """Translate all AI engine exceptions into clean JSON error responses."""
-    from backend.services.ai.exceptions import ParserRecoveryFailedException
+    from backend.services.ai.exceptions import (
+        ParserRecoveryFailedException,
+        LLMRateLimitException,
+        LLMAuthException,
+    )
+    
+    if isinstance(exc, LLMRateLimitException):
+        return JSONResponse(
+            status_code=429,
+            content={"detail": str(exc)},
+            headers={"Retry-After": str(exc.retry_after)},
+        )
+        
+    if isinstance(exc, LLMAuthException):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": str(exc)},
+        )
+
     detail = str(exc)
     if isinstance(exc, ParserRecoveryFailedException):
         detail = "The AI returned an unexpected response format. Please try again."
+    elif isinstance(exc, AIEngineException):
+        detail = "The AI is temporarily unavailable. Please try again."
         
     return JSONResponse(
         status_code=500,
         content={"detail": detail},
+    )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch any unhandled exception to prevent stack trace leakage in production."""
+    # We could log exc here for internal tracking
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Something went wrong. Please try again."},
     )
 
 
