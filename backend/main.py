@@ -16,12 +16,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from backend.api.routers import health, candidate, curriculum, interview
+from backend.api.routers import health, candidate, curriculum, interview, dashboard
 
 app.include_router(health.router)
 app.include_router(candidate.router)
 app.include_router(curriculum.router)
 app.include_router(interview.router)
+app.include_router(dashboard.router)
 
 @app.get("/")
 def read_root():
