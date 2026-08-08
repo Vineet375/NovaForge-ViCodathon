@@ -1,6 +1,8 @@
 class PromptEngine:
     """Builds structured prompts for the AI interview engine."""
     
+    _STRICT_JSON_RULE = "Return ONLY a single valid JSON object. Do not include markdown formatting, code blocks, conversational filler, or explanations."
+
     @staticmethod
     def build_interview_prompt(context: str, topic: str, difficulty: str) -> str:
         """Build a prompt to generate an initial interview question."""
@@ -9,7 +11,7 @@ You are an expert technical interviewer.
 Context: {context}
 
 Generate an interview question for the topic '{topic}' at a '{difficulty}' difficulty level.
-Return ONLY valid JSON. No markdown, no code fences, no explanations.
+{PromptEngine._STRICT_JSON_RULE}
 Schema:
 {{
   "question_text": "str (the question)"
@@ -27,7 +29,7 @@ Original Question: {question}
 Candidate's Answer: {answer}
 
 Based on the answer, generate a single follow-up question to probe deeper or clarify a misconception.
-Return ONLY valid JSON. No markdown, no code fences, no explanations.
+{PromptEngine._STRICT_JSON_RULE}
 Schema:
 {{
   "question_text": "str (the follow-up question)"
@@ -46,7 +48,7 @@ Candidate's Answer: {answer}
 
 Evaluate the candidate's answer for accuracy and completeness. Provide constructive feedback.
 Keep the feedback concise.
-Return ONLY valid JSON. No markdown, no code fences, no explanations.
+{PromptEngine._STRICT_JSON_RULE}
 Schema:
 {{
   "feedback": "str (concise constructive feedback)",
@@ -67,7 +69,7 @@ Interview History:
 {history}
 
 Provide a comprehensive summary of the candidate's performance, highlighting strengths and areas for improvement.
-Return ONLY valid JSON. No markdown, no code fences, no explanations.
+{PromptEngine._STRICT_JSON_RULE}
 Schema:
 {{
   "overall_score": "int (0-100)",
