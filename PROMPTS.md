@@ -859,3 +859,47 @@ pm run build\ sequentially after every logical widget implementation to verify z
 **Result**: A fully responsive, highly polished, data-rich (mocked) SaaS dashboard is now the entry point of the application.
 **Known Limitations**: Mobile sidebar navigation toggle (hamburger menu) is not yet implemented (sidebar currently hides on mobile). Search bar in \CandidateSelector\ is a visual mock only.
 **Next Planned Milestone**: 10 (Interview View / Candidate Flow)
+
+---
+
+## Prompt 31
+**Timestamp**: 2026-08-08T13:00:00+05:30
+**Milestone**: 10 - Interview Experience + Frontend Backend Integration
+**Objective**: Connect the frontend dashboard UI to the existing production backend REST APIs and build the fully functional interactive \/interview\ flow utilizing the Gemini AI service.
+**Context**: The application frontend features a mock premium design. The backend API has full routing for candidate selection, curriculum fetching, and managing complex AI-driven interview states with \SessionManager\ and \AIService\. This milestone bridges them by replacing all static UI arrays with live \etch\ calls and implementing the multi-step interactive evaluation workflow.
+**Prompt Given**: "Milestone 10: Interview Experience + Frontend Backend Integration... Transform the current dashboard into a fully functional AI Interview platform... Create a centralized API client... Create reusable React hooks... Replace dashboard mock data... Build Interview Page... Implement interview flow... Loading Experience... Error Handling... Commit after every logical subtask."
+**Reasoning**: 
+- **Centralized API**: I created \src/lib/api/api.ts\ to wrap \etch\ with a standardized \ApiError\ thrower, ensuring all API responses correctly parse JSON or reject cleanly. I modularized endpoints into \candidate.ts\, \curriculum.ts\, \dashboard.ts\, and \interview.ts\.
+- **Backend Ad-hoc Extension**: The dashboard statistics required a single aggregator endpoint. I spun up \ackend/api/routers/dashboard.py\ quickly to maintain backend architectural parity with the frontend's needs, avoiding duplicate processing on the client.
+- **Custom Hooks**: Abstracted component state management into \src/hooks/\ (e.g. \useInterviewSession\). This cleanly handles loading flags, errors, session hydration, answer submission, and automatic polling for initial questions, preventing prop-drilling entirely.
+- **Interview UI**: Built \/interview/[sessionId]\ utilizing dynamic layout splits. Included interactive states like disabled textareas during API evaluation, graceful error boundary fallbacks, and a distinct "Final Report" completion screen.
+**AI Output Summary**: 
+- Created centralized API client in \src/lib/api/\.
+- Created lightweight \/dashboard\ backend endpoint.
+- Created reusable React hooks for candidates, curriculum, dashboard, and interviews.
+- Wired up \page.tsx\, \CandidateSelector\, \ActivityTimeline\, and \CurriculumProgress\ to live backend data.
+- Implemented full dynamic route \src/app/interview/[sessionId]/page.tsx\.
+- Resolved Next.js Server Components constraint by injecting \"use client"\ directives across hooks and interactive components.
+**Architecture Decisions**: 
+- Utilized \useCallback\ heavily inside hooks to prevent infinite re-renders across dependent \useEffect\ calls.
+- Segmented API clients to match backend FastAPI routers strictly 1:1.
+**Human Review**: Pending
+**Manual Changes**: None
+**Files Created**: 
+- \ackend/api/routers/dashboard.py\
+- \rontend/src/lib/api/*\
+- \rontend/src/hooks/*\
+- \rontend/src/app/interview/[sessionId]/page.tsx\
+**Files Modified**: 
+- \ackend/main.py\
+- \rontend/src/app/page.tsx\
+- \rontend/src/components/dashboard/*\
+- \README.md\
+- \PROMPTS.md\
+**Dependencies Added**: None
+**Git Commit Message**: docs(frontend): update integration documentation
+**Testing Performed**: Frontend and Backend dev servers executed synchronously. \
+pm run build\ executed 4 times iteratively and cleared all TS compilation warnings. 
+**Result**: The application is now fully functional end-to-end. Selecting a candidate dynamically spins up a backend session, generates live Gemini AI questions, evaluates answers, assigns scores, tracks progress, and outputs a final report.
+**Known Limitations**: None.
+**Next Planned Milestone**: 11 (Final Polish)
