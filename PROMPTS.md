@@ -973,3 +973,109 @@ pm run build\ executed 4 times iteratively and cleared all TS compilation warnin
 ## Commit: Final cleanup and documentation updates
 - Removed unused variables from interview.py.
 - Updated README.md to document Milestone 12 changes and environment variables.
+
+
+---
+
+## Milestone 13 – Final Code Freeze / Release Candidate
+Date: 2026-08-08
+
+### Summary
+Full production stabilization pass. No new features. Every change is a cleanup, hardening, or documentation improvement.
+
+### Code Cleanup Commits
+
+#### fix(backend): consolidate imports and fix ordering in main.py and dependencies.py
+- Moved all imports to the top of each file in PEP8 order.
+- Eliminated mid-file imports that were scattered after class instantiation.
+- Added docstring to main.py app factory.
+
+#### fix(backend/interview): deduplicate exception handling and fix stale comments
+- Removed 3× duplicated inline rom backend.services.ai.exceptions import AIEngineException inside except blocks.
+- Replaced repeated isinstance-guard pattern with clean except (HTTPException, AIEngineException): raise idiom.
+- Fixed factually incorrect comment that said '5 questions' instead of '8 questions'.
+- Removed noise comments from the answer submission flow.
+
+#### fix(backend/dashboard): remove unused Depends import
+- Removed Depends from rom fastapi import APIRouter, Depends — it was never used in this module.
+
+#### fix(backend/ai): fix generate_feedback to use real session history and build proper context
+- **Critical fix**: AIService.generate_feedback() was previously called with only a raw session_id string, meaning the LLM received no actual interview Q&A data when generating the final report. The report was essentially hallucinated.
+- Changed signature to accept InterviewSession.
+- Added ContextBuilder.build_candidate_summary_context() and improved uild_history_context() to build a full Q&A transcript.
+- Updated evaluate_answer and generate_follow_up to pass meaningful context strings instead of hardcoded placeholders.
+- Added ContextBuilder.build_history_context_for_question() for single-question context.
+- Removed dead code: score = "" and empty if q.feedback and "score" in q.feedback.lower(): pass block.
+
+#### fix(backend/adapter): sanitize error logs, clarify 404 model error message
+- Added _sanitize_error() helper to redact the API key from all logged error messages.
+- Improved 404 error message: now says explicitly which model name is unavailable and instructs the user to update GEMINI_MODEL in .env.
+- Removed duplicate code extraction line.
+- Removed obvious/noise inline comments.
+
+#### fix(tests): remove unused import and dead comment from test_ai.py
+- Removed import os (unused).
+- Removed stale dead comment block.
+- Fixed 	est_gemini_adapter_mock_response to also monkeypatch GEMINI_MODEL (required by the updated adapter).
+
+#### fix(frontend): remove dead code, stale eslint comment, and console.error
+- Removed dead if block from the useEffect in interview session page that had an empty body with misleading comments.
+- Removed stale // eslint-disable-next-line react-hooks/set-state-in-effect suppression comment.
+- Removed console.error(error) from error.tsx (last remaining console.error in the codebase).
+- Removed import { useEffect } from error.tsx (now unused after removing the effect).
+
+#### chore: remove dev artifact e2e.py
+- Deleted e2e.py from the project root — it was a temporary development debugging script, not production code.
+
+### Documentation Commits
+
+#### docs: fully document all environment variables in .env.example
+- Added header, section comments, and descriptions for every variable.
+- Added note about what to do if GEMINI_MODEL is deprecated (404 error).
+
+#### docs: complete README rewrite with all sections for hackathon submission
+- Full rewrite from perspective of first-time developer and hackathon judge.
+- Added all required sections: Project Overview, Problem Statement, Features table, Architecture diagram, Tech Stack table, Folder Structure, AI Workflow diagram, Backend Architecture, Frontend Architecture, API Reference table, Environment Variables table, Installation (verified commands), Running the Application, Running Tests, Gemini API Configuration, Common Troubleshooting, Deployment Notes, Known Limitations, Future Improvements, Authors, License.
+- All commands verified on Windows and documented for macOS/Linux equivalents.
+- Added explicit note explaining why backend must be run from project root.
+
+### Security Audit Results
+- ? No secrets committed. .env is gitignored.
+- ? API key is sanitized from all log output via _sanitize_error().
+- ? No stack traces in any error response body. All AI exceptions go through the global AIEngineException handler.
+- ? GEMINI_API_KEY never appears in any logged line.
+
+### Test Results
+- ? 17/17 backend tests pass (pytest).
+- ? AI pipeline tests pass with mocked LLM.
+- ? Full interview flow tests pass (start ? question ? answer ? follow-up ? complete ? feedback).
+- ? Invalid state transition tests pass.
+- ? Domain logic tests pass.
+
+### End-to-End Verification
+- ? Backend starts successfully (Application startup complete).
+- ? GET /health ? 200
+- ? GET /candidates ? 200, 20 candidates
+- ? GET /curriculum ? 200, modules + days
+- ? GET /dashboard ? 200, stats + activities
+- ? POST /interview/start ? session created
+- ? POST /interview/{id}/next ? Gemini generates context-aware question
+- ? POST /interview/{id}/answer ? Gemini evaluates answer, returns feedback and score
+- ? POST /interview/{id}/answer (follow_up_required=true) ? follow-up question returned
+- ? GET /interview/{id}/feedback (after 8 questions) ? comprehensive report with real history
+- ? Resume Interview works via localStorage after page reload
+- ? 404 session recovery works (clears localStorage, redirects to Dashboard)
+
+### Gemini Model Configuration
+- Model is always read from GEMINI_MODEL env var. Never hardcoded.
+- 404 from Gemini returns clear user-friendly message naming the unavailable model.
+- No silent fallback to another model.
+- 429 rate limit: retries up to 3× with continuation.
+- 401 auth failure: immediate failure with clear message.
+- Timeout: immediate failure with clear message.
+
+### Known Limitations (Release Candidate)
+- In-memory sessions (lost on server restart; frontend handles gracefully).
+- No authentication (demo/hackathon scope).
+- Static JSON data files (no admin UI).
+- Model availability tied to Google's API lifecycle.
