@@ -9,7 +9,7 @@ NovaForge is a production-grade AI-powered technical interview system built for 
 ## 🎥 Demo Video
 
 - [LinkedIn Demo Video](https://www.linkedin.com/posts/vineetkhatri375_vicodathon-aihackathon-artificialintelligence-ugcPost-7492171799812665344-gUE_/)
-- [GitHub Demo Video](LINK_TO_GITHUB_VIDEO)
+- [GitHub Demo Video](./Video Demo/NovaForge-ViCodathon Demo.mp4)
 
 ## 💻 GitHub Repository
 
@@ -64,6 +64,86 @@ graph TD
     Backend --> API
     API --> Frontend
 ```
+
+## 🚀 Getting Started / Setup & Installation
+
+### 1. Prerequisites
+- **Git**
+- **Python 3.13+** (Required for the FastAPI backend)
+- **Node.js 20+** (Required for the Next.js frontend)
+
+### 2. Clone the Repository
+```bash
+git clone https://github.com/Vineet375/NovaForge-ViCodathon.git
+cd "NovaForge - ViCodathon"
+```
+
+### 3. Backend Setup
+The backend utilizes FastAPI. All backend commands must be executed from the **project root**.
+
+```bash
+# Create a virtual environment
+python -m venv backend/venv
+
+# Activate the virtual environment
+# Windows:
+backend\venv\Scripts\activate
+# macOS/Linux:
+source backend/venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment variables template
+cp .env.example .env
+```
+
+**Environment Variables:**
+Open `.env` and configure the AI/API services. The application implements a highly available AI provider chain.
+- `GEMINI_API_KEY_1`: **Required** for primary generation.
+- `GEMINI_MODEL`: **Required** (e.g., `gemini-2.5-flash-lite-preview-06-17`).
+- `GEMINI_API_KEY_2`, `GEMINI_API_KEY_3`: *Optional* failovers.
+- `NVIDIA_API_KEY_1`, `NVIDIA_API_KEY_2`: *Optional* fallbacks.
+
+**Run the Backend:**
+```bash
+uvicorn backend.main:app --reload --port 8000
+```
+*(The API will be available at `http://localhost:8000`)*
+
+### 4. Frontend Setup
+The frontend utilizes Next.js. Navigate to the frontend directory to run these commands.
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+```
+
+**Environment Variables:**
+Ensure the `.env` file in the project root has `NEXT_PUBLIC_API_URL` pointing to the backend (e.g., `http://localhost:8000` or `http://127.0.0.1:8000`).
+
+**Run the Frontend (Development):**
+```bash
+npm run dev
+```
+*(The UI will be available at `http://localhost:3000`)*
+
+**Production Build (Optional verification):**
+```bash
+npm run build
+```
+
+### 5. Testing / Verification
+The backend includes a comprehensive `pytest` suite simulating domain logic, duplicate checking, and JSON parsing without real API calls.
+Ensure the virtual environment is activated and run from the project root:
+```bash
+pytest -v
+```
+*(Expected: 100% pass rate across domain and API integration tests)*
+
+For the frontend, running `npm run build` serves as a build verification confirming static analyzability and strict TypeScript compliance.
 
 ## 🌐 Deployment Architecture
 
