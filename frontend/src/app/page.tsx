@@ -41,7 +41,7 @@ export default function Home() {
         <Section className="py-0 md:py-0 lg:py-0">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <SectionHeader className="pb-0 md:pb-0">
-              <SectionTitle className="text-3xl sm:text-4xl">Good morning, Alex</SectionTitle>
+              <SectionTitle className="text-3xl sm:text-4xl">Hello, NovaForge</SectionTitle>
               <SectionDescription>
                 You have an interview scheduled for tomorrow. Keep preparing!
               </SectionDescription>
