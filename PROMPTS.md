@@ -1169,3 +1169,11 @@ URGENT LOCAL RUNTIME BUG FIX
 - Updated the frontend page.tsx to pass the correct report object structure.
 - Updated /next to retry the final evaluation if it fails.
 **AI Output Summary**: Implemented deduplication and personalized prompts. Fixed the frontend report prop mapping. Added tests for all paths.
+
+## Milestone 20 - Vercel Production Deployment Preparation
+
+**Decision:** Deploy the Next.js frontend to Vercel and keep the FastAPI backend on a single-replica persistent web service.
+
+**Reasoning:** The existing interview flow stores state in the process-local `SessionManager` and schedules AI question generation and final evaluation with FastAPI `BackgroundTasks`. Vercel Functions do not provide a reliable persistent process or instance affinity for this workflow. No interview architecture was changed.
+
+**Changes:** Added `FRONTEND_ORIGINS` for explicit production CORS configuration, documented the Vercel frontend settings and separate-backend requirement, and retained the local `http://127.0.0.1:8000` frontend fallback.

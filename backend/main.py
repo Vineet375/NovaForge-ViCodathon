@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -10,9 +12,18 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Comma-separated browser origins allowed to call this API. Keep local origins
+# available by default so the existing development workflow continues to work.
+DEFAULT_CORS_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000"
+cors_origins = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv("FRONTEND_ORIGINS", DEFAULT_CORS_ORIGINS).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

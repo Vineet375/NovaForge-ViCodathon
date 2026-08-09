@@ -534,14 +534,62 @@ Ensure `NEXT_PUBLIC_API_URL` in `.env` exactly matches the backend address (incl
 
 ## Deployment Notes
 
-This project is built for the hackathon demo environment. For production deployment, consider:
+### Supported production architecture
 
-- **Sessions**: Replace the in-memory `SessionManager` with a Redis or database-backed store.
-- **CORS**: Restrict `allow_origins` to specific frontend domains.
-- **Secrets**: Use a secrets manager (AWS Secrets Manager, GCP Secret Manager) instead of `.env` files.
-- **Rate Limiting**: Add API rate limiting middleware to protect the Gemini API quota.
-- **Frontend**: Run `npm run build` and serve the `.next/` output with a CDN.
-- **Backend**: Run Uvicorn behind a reverse proxy (Nginx) with multiple workers.
+Deploy the `frontend/` Next.js application to Vercel and deploy the FastAPI application as a **single-replica persistent web service** (for example, Render or Railway). Do not deploy the current FastAPI backend as a Vercel Function.
+
+The interview workflow stores sessions in memory and schedules question generation and final evaluation using FastAPI `BackgroundTasks`. Vercel Functions can be suspended after a response and requests can reach different instances, so it cannot reliably preserve the current session state or guarantee completion of those background tasks.
+
+### Vercel frontend settings
+
+- **Framework Preset:** Next.js
+- **Root Directory:** `frontend`
+- **Build Command:** `npm run build`
+- **Install Command:** `npm install`
+- **Output Directory:** leave unset (Next.js default)
+- **Environment Variable:** `NEXT_PUBLIC_API_URL=https://<your-fastapi-service-host>`
+
+Set `NEXT_PUBLIC_API_URL` for each Vercel environment (Production and Preview, if previews should call a backend). It is public by design and must contain only the backend URL, never an API key.
+
+### FastAPI backend settings
+
+Run the backend from the repository root so imports such as `backend.main:app` resolve correctly:
+
+```bash
+uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+```
+
+Use one web-service instance/worker for the current in-memory session manager. Configure `FRONTEND_ORIGINS` to the exact Vercel frontend URL, for example `https://your-project.vercel.app`. Do not use `*`.
+
+### Required production environment variables
+
+**Vercel frontend**
+
+- `NEXT_PUBLIC_API_URL`
+
+**FastAPI backend**
+
+- `GEMINI_API_KEY_1` (or the legacy `GEMINI_API_KEY` fallback supported by the code)
+- `GEMINI_API_KEY_2`
+- `GEMINI_API_KEY_3`
+- `GEMINI_MODEL`
+- `NVIDIA_API_KEY_1`
+- `NVIDIA_MODEL_PRIMARY`
+- `NVIDIA_API_KEY_2`
+- `NVIDIA_MODEL_SECONDARY`
+- `ENVIRONMENT`
+- `FRONTEND_ORIGINS`
+- `PORT` (provided automatically by most backend hosts)
+
+Keep these values in the hosting providers' environment-variable dashboards. `.env` files are ignored by Git and must never be committed.
+
+### Local development
+
+Leave `NEXT_PUBLIC_API_URL=http://127.0.0.1:8000` and `FRONTEND_ORIGINS=http://localhost:3000,http://127.0.0.1:3000` in your local `.env`. Start the backend from the repository root, then start the frontend from `frontend/` with `npm run dev`.
+
+### Operational limitation
+
+This deployment preserves the tested single-process demo architecture, but an instance restart still loses active in-memory sessions and any in-flight background task. Durable, horizontally scalable production operation requires a future architecture change to persistent session storage and a queue/worker; it is intentionally out of scope for this deployment preparation.
 
 ---
 
